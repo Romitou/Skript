@@ -16,12 +16,34 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-/**
- * @author Peter Güttinger
- */
-@NonNullByDefault({DefaultLocation.PARAMETER, DefaultLocation.RETURN_TYPE, DefaultLocation.FIELD})
-package ch.njol.yggdrasil;
+package com.skriptlang.skript.yggdrasil;
 
-import org.eclipse.jdt.annotation.DefaultLocation;
-import org.eclipse.jdt.annotation.NonNullByDefault;
+import ch.njol.skript.classes.ClassInfo;
 
+public class YggdrasilSingle extends Yggdrasil {
+	private Object value;
+
+	public YggdrasilSingle(ClassInfo<?> type) {
+		super(type);
+	}
+
+	public YggdrasilSingle(ClassInfo<?> type, Object value) {
+		super(type);
+		this.value = value;
+	}
+
+	public void write(Object value) {
+		this.value = value;
+	}
+
+	public Object read() {
+		return this.value;
+	}
+
+	public void checkType(Class<?> type) {
+		if (!type.isInstance(this.value)) {
+			throw new IllegalArgumentException("The value is not of type " + type.getSimpleName());
+		}
+	}
+
+}

@@ -16,14 +16,28 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-/**
- * Code related to loading, handling, and saving variables. Some code is found in <tt>lang</tt> as well (e.g. in {@link ch.njol.skript.lang.Variable}).
- * 
- * @author Peter Güttinger
- */
-@NonNullByDefault({DefaultLocation.PARAMETER, DefaultLocation.RETURN_TYPE, DefaultLocation.FIELD})
-package ch.njol.skript.variables;
+package com.skriptlang.skript.variables;
 
-import org.eclipse.jdt.annotation.DefaultLocation;
-import org.eclipse.jdt.annotation.NonNullByDefault;
+import ch.njol.skript.config.SectionNode;
+import com.skriptlang.skript.old.Variable;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+
+public interface VariableStorage {
+
+	@NotNull String getStorageName();
+
+	boolean configure(SectionNode node);
+
+	HashMap<String, Object> getPreloadedVariables();
+
+	Variable<?> getVariable(String name);
+
+	void setVariable(String name, Object value);
+
+	void deleteVariable(String name);
+
+	void close();
+
+}

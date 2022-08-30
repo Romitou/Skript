@@ -18,57 +18,55 @@
  */
 package ch.njol.skript.util;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.localization.Message;
 import ch.njol.util.Math2;
-import ch.njol.yggdrasil.YggdrasilSerializable;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Peter Güttinger
  */
-public class Time implements YggdrasilSerializable {
-	
+public class Time {
+
 	private final static int TICKS_PER_HOUR = 1000, TICKS_PER_DAY = 24 * TICKS_PER_HOUR;
 	private final static double TICKS_PER_MINUTE = 1000. / 60;
 	/**
 	 * 0 ticks == 6:00
 	 */
 	private final static int HOUR_ZERO = 6 * TICKS_PER_HOUR;
-	
+
 	private final int time;
-	
+
 	public Time() {
 		time = 0;
 	}
-	
+
 	public Time(final int time) {
 		this.time = Math2.mod(time, TICKS_PER_DAY);
 	}
-	
+
 	/**
 	 * @return Ticks in Minecraft time (0 ticks == 6:00)
 	 */
 	public int getTicks() {
 		return time;
 	}
-	
+
 	/**
 	 * @return Ticks in day time (0 ticks == 0:00)
 	 */
 	public int getTime() {
 		return (time + HOUR_ZERO) % TICKS_PER_DAY;
 	}
-	
+
 	@Override
 	public String toString() {
 		return toString(time);
 	}
-	
+
 	public static String toString(final int ticks) {
 		assert 0 <= ticks && ticks < TICKS_PER_DAY;
 		final int t = (ticks + HOUR_ZERO) % TICKS_PER_DAY;
@@ -80,11 +78,11 @@ public class Time implements YggdrasilSerializable {
 		}
 		return "" + hours + ":" + (minutes < 10 ? "0" : "") + minutes;
 	}
-	
+
 	private final static Message m_error_24_hours = new Message("time.errors.24 hours");
 	private final static Message m_error_12_hours = new Message("time.errors.12 hours");
 	private final static Message m_error_60_minutes = new Message("time.errors.60 minutes");
-	
+
 	/**
 	 * @param s The trim()med string to parse
 	 * @return The parsed time of null if the input was invalid
@@ -133,12 +131,12 @@ public class Time implements YggdrasilSerializable {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return time;
 	}
-	
+
 	@Override
 	public boolean equals(final @Nullable Object obj) {
 		if (this == obj)
@@ -150,5 +148,5 @@ public class Time implements YggdrasilSerializable {
 		final Time other = (Time) obj;
 		return time == other.time;
 	}
-	
+
 }

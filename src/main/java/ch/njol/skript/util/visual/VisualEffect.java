@@ -24,7 +24,6 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.SyntaxElement;
 import ch.njol.util.Kleenean;
-import ch.njol.yggdrasil.YggdrasilSerializable;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -34,7 +33,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.Objects;
 
-public class VisualEffect implements SyntaxElement, YggdrasilSerializable {
+public class VisualEffect implements SyntaxElement {
 
 	private static final boolean HAS_REDSTONE_DATA = Skript.classExists("org.bukkit.Particle$DustOptions");
 
@@ -46,7 +45,7 @@ public class VisualEffect implements SyntaxElement, YggdrasilSerializable {
 	private float dX, dY, dZ = 0f;
 
 	public VisualEffect() {}
-	
+
 	@SuppressWarnings({"null", "ConstantConditions"})
 	@Override
 	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
@@ -143,7 +142,7 @@ public class VisualEffect implements SyntaxElement, YggdrasilSerializable {
 	public String toString() {
 		return toString(0);
 	}
-	
+
 	public String toString(int flags) {
 		return type.getName().toString(flags);
 	}
@@ -162,5 +161,5 @@ public class VisualEffect implements SyntaxElement, YggdrasilSerializable {
 		VisualEffect that = (VisualEffect) o;
 		return type == that.type && Objects.equals(data, that.data);
 	}
-	
+
 }

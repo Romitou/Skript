@@ -18,16 +18,6 @@
  */
 package ch.njol.skript.entity;
 
-import java.util.Arrays;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Enderman;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.lang.Literal;
@@ -37,29 +27,38 @@ import ch.njol.skript.localization.ArgsMessage;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.util.Checker;
 import ch.njol.util.coll.CollectionUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Enderman;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.Arrays;
 
 @SuppressWarnings("deprecation")
 public class EndermanData extends EntityData<Enderman> {
-	
+
 	static {
 		EntityData.register(EndermanData.class, "enderman", Enderman.class, "enderman");
 	}
-	
+
 	/**
 	 * Spigot 1.13 introduced new block data API, which must be used instead
 	 * of the old one if targeting API version 1.13.
 	 */
 	static final boolean useBlockData = Skript.isRunningMinecraft(1, 13);
-	
+
 	@Nullable
 	private ItemType[] hand = null;
-	
+
 	public EndermanData() {}
-	
+
 	public EndermanData(@Nullable ItemType[] hand) {
 		this.hand = hand;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected boolean init(final Literal<?>[] exprs, final int matchedPattern, final ParseResult parseResult) {
@@ -67,7 +66,7 @@ public class EndermanData extends EntityData<Enderman> {
 			hand = ((Literal<ItemType>) exprs[0]).getAll();
 		return true;
 	}
-	
+
 	@Override
 	protected boolean init(final @Nullable Class<? extends Enderman> c, final @Nullable Enderman e) {
 		if (e != null) {
@@ -88,7 +87,7 @@ public class EndermanData extends EntityData<Enderman> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void set(final Enderman entity) {
 		if (hand != null) {
@@ -105,9 +104,9 @@ public class EndermanData extends EntityData<Enderman> {
 				}
 			}
 		}
-		
+
 	}
-	
+
 	@Override
 	public boolean match(final Enderman entity) {
 		return hand == null || SimpleExpression.check(hand, new Checker<ItemType>() {
@@ -122,14 +121,14 @@ public class EndermanData extends EntityData<Enderman> {
 			}
 		}, false, false);
 	}
-	
+
 	@Override
 	public Class<Enderman> getType() {
 		return Enderman.class;
 	}
-	
+
 	private final static ArgsMessage format = new ArgsMessage("entities.enderman.format");
-	
+
 	@Override
 	public String toString(final int flags) {
 		final ItemType[] hand = this.hand;
@@ -137,12 +136,12 @@ public class EndermanData extends EntityData<Enderman> {
 			return super.toString(flags);
 		return format.toString(super.toString(flags), Classes.toString(hand, false));
 	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		return Arrays.hashCode(hand);
 	}
-	
+
 	@Override
 	protected boolean equals_i(final EntityData<?> obj) {
 		if (!(obj instanceof EndermanData))
@@ -150,7 +149,7 @@ public class EndermanData extends EntityData<Enderman> {
 		final EndermanData other = (EndermanData) obj;
 		return Arrays.equals(hand, other.hand);
 	}
-	
+
 //		if (hand == null)
 //			return "";
 //		final StringBuilder b = new StringBuilder();
@@ -165,42 +164,23 @@ public class EndermanData extends EntityData<Enderman> {
 //			b.append(s.second.replace(",", ",,").replace(":", "::"));
 //		}
 //		return b.toString();
-	@SuppressWarnings("null")
-	@Override
-	@Deprecated
-	protected boolean deserialize(final String s) {
-		if (s.isEmpty())
-			return true;
-		final String[] split = s.split("(?<!,),(?!,)");
-		hand = new ItemType[split.length];
-		for (int i = 0; i < hand.length; i++) {
-			final String[] t = split[i].split("(?<!:):(?::)");
-			if (t.length != 2)
-				return false;
-			final Object o = Classes.deserialize(t[0], t[1].replace(",,", ",").replace("::", ":"));
-			if (o == null || !(o instanceof ItemType))
-				return false;
-			hand[i] = (ItemType) o;
-		}
-		return false;
-	}
-	
+
 	private boolean isSubhand(final @Nullable ItemType[] sub) {
 		if (hand != null)
 			return sub != null && ItemType.isSubset(hand, sub);
 		return true;
 	}
-	
+
 	@Override
 	public boolean isSupertypeOf(final EntityData<?> e) {
 		if (e instanceof EndermanData)
 			return isSubhand(((EndermanData) e).hand);
 		return false;
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new EndermanData(hand);
 	}
-	
+
 }

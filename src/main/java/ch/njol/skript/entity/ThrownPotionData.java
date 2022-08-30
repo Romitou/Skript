@@ -18,15 +18,6 @@
  */
 package ch.njol.skript.entity;
 
-import java.util.Arrays;
-
-import org.bukkit.Location;
-import org.bukkit.entity.ThrownPotion;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.Consumer;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.aliases.Aliases;
 import ch.njol.skript.aliases.ItemType;
@@ -38,6 +29,14 @@ import ch.njol.skript.localization.Noun;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.registrations.Converters;
 import ch.njol.util.coll.CollectionUtils;
+import org.bukkit.Location;
+import org.bukkit.entity.ThrownPotion;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Consumer;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.Arrays;
 
 /**
  * @author Peter Güttinger
@@ -46,16 +45,16 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 	static {
 		EntityData.register(ThrownPotionData.class, "thrown potion", ThrownPotion.class, "thrown potion");
 	}
-	
+
 	private static final Adjective m_adjective = new Adjective("entities.thrown potion.adjective");
 	private static final boolean RUNNING_LEGACY = !Skript.isRunningMinecraft(1, 13);
 	private static final ItemType POTION = Aliases.javaItemType("potion");
 	private static final ItemType SPLASH_POTION = Aliases.javaItemType("splash potion");
 	private static final ItemType LINGER_POTION = Aliases.javaItemType("lingering potion");
-	
+
 	@Nullable
 	private ItemType[] types;
-	
+
 	@Override
 	protected boolean init(final Literal<?>[] exprs, final int matchedPattern, final ParseResult parseResult) {
 		if (exprs.length > 0 && exprs[0] != null) {
@@ -77,7 +76,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected boolean init(final @Nullable Class<? extends ThrownPotion> c, final @Nullable ThrownPotion e) {
 		if (e != null) {
@@ -86,7 +85,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected boolean match(final ThrownPotion entity) {
 		if (types != null) {
@@ -129,17 +128,17 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		assert false;
 	}
-	
+
 	@Override
 	public Class<? extends ThrownPotion> getType() {
 		return ThrownPotion.class;
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new ThrownPotionData();
 	}
-	
+
 	@Override
 	public boolean isSupertypeOf(final EntityData<?> e) {
 		if (!(e instanceof ThrownPotionData))
@@ -150,7 +149,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public String toString(final int flags) {
 		final ItemType[] types = this.types;
@@ -163,28 +162,17 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		b.append(Classes.toString(types, flags & Language.NO_ARTICLE_MASK, false));
 		return "" + b.toString();
 	}
-	
-	//		return ItemType.serialize(types);
-	@Override
-	@Deprecated
-	protected boolean deserialize(final String s) {
-		throw new UnsupportedOperationException("old serialization is no longer supported");
-//		if (s.isEmpty())
-//			return true;
-//		types = ItemType.deserialize(s);
-//		return types != null;
-	}
-	
+
 	@Override
 	protected boolean equals_i(final EntityData<?> obj) {
 		if (!(obj instanceof ThrownPotionData))
 			return false;
 		return Arrays.equals(types, ((ThrownPotionData) obj).types);
 	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		return Arrays.hashCode(types);
 	}
-	
+
 }

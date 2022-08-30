@@ -16,10 +16,31 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-package ch.njol.skript.classes;
+package com.skriptlang.skript.old;
 
-/**
- * @author Peter Güttinger
- */
-@Deprecated
-public interface SerializableChanger<T> extends Changer<T> {}
+public abstract class Variable<V> {
+
+	private final String name;
+
+	Variable(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Object getAll() {
+		if (this instanceof SingleVariable<?>) {
+			return ((SingleVariable<?>) this).getValue();
+		} else {
+			return ((ListVariable<?>) this).getValues();
+		}
+	}
+
+	abstract void setChild(Variable<? extends V> child);
+
+	abstract String getFullName();
+
+	abstract public String toSchema();
+}

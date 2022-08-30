@@ -16,12 +16,19 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-/**
- * @author Peter Güttinger
- */
-@NonNullByDefault({DefaultLocation.PARAMETER, DefaultLocation.RETURN_TYPE, DefaultLocation.FIELD})
-package ch.njol.yggdrasil.util;
+package com.skriptlang.skript.yggdrasil;
 
-import org.eclipse.jdt.annotation.DefaultLocation;
-import org.eclipse.jdt.annotation.NonNullByDefault;
+import ch.njol.skript.classes.ClassInfo;
 
+public abstract class Yggdrasil {
+
+	private final ClassInfo<?> type;
+
+	protected Yggdrasil(ClassInfo<?> type) {
+		this.type = type;
+	}
+
+	public ClassInfo<?> getType() {
+		return type;
+	}
+}

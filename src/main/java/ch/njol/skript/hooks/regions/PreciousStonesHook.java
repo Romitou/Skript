@@ -18,20 +18,11 @@
  */
 package ch.njol.skript.hooks.regions;
 
-import static ch.njol.skript.variables.Variables.yggdrasil;
-
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.StreamCorruptedException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import ch.njol.skript.hooks.regions.classes.Region;
+import ch.njol.skript.util.AABB;
+import net.sacredlabyrinth.Phaed.PreciousStones.PreciousStones;
+import net.sacredlabyrinth.Phaed.PreciousStones.field.Field;
+import net.sacredlabyrinth.Phaed.PreciousStones.field.FieldFlag;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -41,13 +32,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.eclipse.jdt.annotation.Nullable;
 
-import ch.njol.skript.hooks.regions.classes.Region;
-import ch.njol.skript.util.AABB;
-import ch.njol.yggdrasil.Fields;
-import ch.njol.yggdrasil.YggdrasilID;
-import net.sacredlabyrinth.Phaed.PreciousStones.PreciousStones;
-import net.sacredlabyrinth.Phaed.PreciousStones.field.Field;
-import net.sacredlabyrinth.Phaed.PreciousStones.field.FieldFlag;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PreciousStonesHook extends RegionsPlugin<PreciousStones> {
 
@@ -93,7 +81,6 @@ public class PreciousStonesHook extends RegionsPlugin<PreciousStones> {
         return PreciousStonesRegion.class;
     }
 
-    @YggdrasilID("PreciousStonesRegion")
     public final class PreciousStonesRegion extends Region {
 
         private transient Field field;
@@ -168,16 +155,6 @@ public class PreciousStonesHook extends RegionsPlugin<PreciousStones> {
         @Override
         public int hashCode() {
             return Objects.hash(field);
-        }
-
-        @Override
-        public Fields serialize() throws NotSerializableException {
-            return new Fields(this);
-        }
-
-        @Override
-        public void deserialize(final Fields fields) throws StreamCorruptedException, NotSerializableException {
-            new Fields(fields).setFields(this);
         }
     }
 }

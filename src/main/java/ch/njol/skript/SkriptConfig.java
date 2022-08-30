@@ -18,12 +18,7 @@
  */
 package ch.njol.skript;
 
-import ch.njol.skript.classes.data.BukkitClasses;
-import ch.njol.skript.config.Config;
-import ch.njol.skript.config.EnumParser;
-import ch.njol.skript.config.Option;
-import ch.njol.skript.config.OptionSection;
-import ch.njol.skript.config.SectionNode;
+import ch.njol.skript.config.*;
 import ch.njol.skript.hooks.Hook;
 import ch.njol.skript.hooks.VaultHook;
 import ch.njol.skript.hooks.regions.GriefPreventionHook;
@@ -40,7 +35,6 @@ import ch.njol.skript.util.FileUtils;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.chat.ChatMessages;
 import ch.njol.skript.util.chat.LinkParseMode;
-import ch.njol.skript.variables.Variables;
 import org.bukkit.event.EventPriority;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -57,7 +51,7 @@ import java.util.regex.PatternSyntaxException;
 
 /**
  * Important: don't save values from the config, a '/skript reload config/configs/all' won't work correctly otherwise!
- * 
+ *
  * @author Peter Güttinger
  */
 @SuppressWarnings("unused")
@@ -66,10 +60,10 @@ public class SkriptConfig {
 	@Nullable
 	static Config mainConfig;
 	static Collection<Config> configs = new ArrayList<>();
-	
+
 	static final Option<String> version = new Option<>("version", Skript.getVersion().toString())
 			.optional(true);
-	
+
 	public static final Option<String> language = new Option<>("language", "english")
 			.optional(true)
 			.setter(s -> {
@@ -77,7 +71,7 @@ public class SkriptConfig {
 					Skript.error("No language file found for '" + s + "'!");
 				}
 			});
-	
+
 	static final Option<Boolean> checkForNewVersion = new Option<>("check for new version", false)
 			.setter(t -> {
 				SkriptUpdater updater = Skript.getInstance().getUpdater();
@@ -125,13 +119,13 @@ public class SkriptConfig {
 	public static final Option<Boolean> enableEffectCommands = new Option<>("enable effect commands", false);
 	public static final Option<String> effectCommandToken = new Option<>("effect command token", "!");
 	public static final Option<Boolean> allowOpsToUseEffectCommands = new Option<>("allow ops to use effect commands", false);
-	
+
 	// everything handled by Variables
 	public static final OptionSection databases = new OptionSection("databases");
-	
+
 	public static final Option<Boolean> usePlayerUUIDsInVariableNames = new Option<>("use player UUIDs in variable names", false); // TODO change to true later (as well as in the default config)
 	public static final Option<Boolean> enablePlayerVariableFix = new Option<>("player variable fix", true);
-	
+
 	@SuppressWarnings("null")
 	private static final DateFormat shortDateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 	private static final Option<DateFormat> dateFormat = new Option<>("date format", shortDateFormat, s -> {
@@ -144,17 +138,17 @@ public class SkriptConfig {
 		}
 		return null;
 	});
-	
+
 	public static String formatDate(final long timestamp) {
 		final DateFormat f = dateFormat.value();
 		synchronized (f) {
 			return "" + f.format(timestamp);
 		}
 	}
-	
+
 	static final Option<Verbosity> verbosity = new Option<>("verbosity", Verbosity.NORMAL, new EnumParser<>(Verbosity.class, "verbosity"))
 			.setter(SkriptLogger::setVerbosity);
-	
+
 	public static final Option<EventPriority> defaultEventPriority = new Option<>("plugin priority", EventPriority.NORMAL, s -> {
 		try {
 			return EventPriority.valueOf(s.toUpperCase(Locale.ENGLISH));
@@ -163,16 +157,16 @@ public class SkriptConfig {
 			return null;
 		}
 	});
-  
+
 	public static final Option<Boolean> logPlayerCommands = new Option<Boolean>("log player commands", false);
-	
+
 	/**
 	 * Maximum number of digits to display after the period for floats and doubles
 	 */
 	public static final Option<Integer> numberAccuracy = new Option<>("number accuracy", 2);
-	
+
 	public static final Option<Integer> maxTargetBlockDistance = new Option<>("maximum target block distance", 100);
-	
+
 	public static final Option<Boolean> caseSensitive = new Option<>("case sensitive", false);
 	public static final Option<Boolean> allowFunctionsBeforeDefs = new Option<>("allow function calls before definations", false)
 			.optional(true);
@@ -181,19 +175,19 @@ public class SkriptConfig {
 	public static final Option<Boolean> disableMissingAndOrWarnings = new Option<>("disable variable missing and/or warnings", false);
 	public static final Option<Boolean> disableVariableStartingWithExpressionWarnings =
 		new Option<>("disable starting a variable's name with an expression warnings", false);
-	
+
 	@Deprecated
 	public static final Option<Boolean> enableScriptCaching = new Option<>("enable script caching", false)
 			.optional(true);
-	
+
 	public static final Option<Boolean> keepConfigsLoaded = new Option<>("keep configs loaded", false)
 			.optional(true);
-	
+
 	public static final Option<Boolean> addonSafetyChecks = new Option<>("addon safety checks", false)
 			.optional(true);
-	
+
 	public static final Option<Boolean> apiSoftExceptions = new Option<>("soft api exceptions", false);
-	
+
 	public static final Option<Boolean> enableTimings = new Option<>("enable timings", false)
 			.setter(t -> {
 				if (Skript.classExists("co.aikar.timings.Timings")) { // Check for Paper server
@@ -206,7 +200,7 @@ public class SkriptConfig {
 					SkriptTimings.setEnabled(false); // Just to be sure, deactivate timings support completely
 				}
 			});
-	
+
 	public static final Option<String> parseLinks = new Option<>("parse links in chat messages", "disabled")
 			.setter(t -> {
 				try {
@@ -232,9 +226,8 @@ public class SkriptConfig {
 			});
 
 	public static final Option<Boolean> caseInsensitiveVariables = new Option<>("case-insensitive variables", true)
-			.setter(t -> Variables.caseInsensitiveVariables = t)
 			.optional(true);
-	
+
 	public static final Option<Boolean> colorResetCodes = new Option<>("color codes reset formatting", true)
 			.setter(t -> {
 				try {
@@ -247,7 +240,7 @@ public class SkriptConfig {
 	public static final Option<String> scriptLoaderThreadSize = new Option<>("script loader thread size", "0")
 			.setter(s -> {
 				int asyncLoaderSize;
-				
+
 				if (s.equalsIgnoreCase("processor count")) {
 					asyncLoaderSize = Runtime.getRuntime().availableProcessors();
 				} else {
@@ -258,17 +251,17 @@ public class SkriptConfig {
 						return;
 					}
 				}
-				
+
 				ScriptLoader.setAsyncLoaderSize(asyncLoaderSize);
 			})
 			.optional(true);
-	
+
 	public static final Option<Boolean> allowUnsafePlatforms = new Option<>("allow unsafe platforms", false)
 			.optional(true);
 
 	public static final Option<Boolean> keepLastUsageDates = new Option<>("keep command last usage dates", false)
 			.optional(true);
-	
+
 	public static final Option<Boolean> loadDefaultAliases = new Option<>("load default aliases", true)
 			.optional(true);
 
@@ -331,7 +324,7 @@ public class SkriptConfig {
 	public static Config getConfig() {
 		return mainConfig;
 	}
-	
+
 	// also used for reloading
 	static boolean load() {
 		try {
@@ -353,7 +346,7 @@ public class SkriptConfig {
 				Skript.error("Config file 'config.sk' cannot be read!");
 				return false;
 			}
-			
+
 			Config mc;
 			try {
 				mc = new Config(configFile, false, false, ":");
@@ -362,7 +355,7 @@ public class SkriptConfig {
 				return false;
 			}
 			mainConfig = mc;
-			
+
 			if (!Skript.getVersion().toString().equals(mc.get(version.key))) {
 				try {
 					final InputStream in = Skript.getInstance().getResource("config.sk");
@@ -372,9 +365,9 @@ public class SkriptConfig {
 					}
 					final Config newConfig = new Config(in, "Skript.jar/config.sk", false, false, ":");
 					in.close();
-					
+
 					boolean forceUpdate = false;
-					
+
 					if (mc.getMainNode().get("database") != null) { // old database layout
 						forceUpdate = true;
 						try {
@@ -384,15 +377,15 @@ public class SkriptConfig {
 							assert newDBs != null;
 							final SectionNode newDB = (SectionNode) newDBs.get("database 1");
 							assert newDB != null;
-							
+
 							newDB.setValues(oldDB);
-							
+
 							// '.db' was dynamically added before
 							final String file = newDB.getValue("file");
 							assert file != null;
 							if (!file.endsWith(".db"))
 								newDB.set("file", file + ".db");
-							
+
 							final SectionNode def = (SectionNode) newDBs.get("default");
 							assert def != null;
 							def.set("backup interval", "" + mc.get("variables backup interval"));
@@ -404,7 +397,7 @@ public class SkriptConfig {
 							return false;
 						}
 					}
-					
+
 					if (newConfig.setValues(mc, version.key, databases.key) || forceUpdate) { // new config is different
 						final File bu = FileUtils.backup(configFile);
 						newConfig.getMainNode().set(version.key, Skript.getVersion().toString());
@@ -421,9 +414,9 @@ public class SkriptConfig {
 					Skript.error("Could not load the new config from the jar file: " + e.getLocalizedMessage());
 				}
 			}
-			
+
 			mc.load(SkriptConfig.class);
-			
+
 //			if (!keepConfigsLoaded.value())
 //				mainConfig = null;
 		} catch (final RuntimeException e) {

@@ -29,7 +29,6 @@ import ch.njol.skript.util.Color;
 import ch.njol.skript.util.ColorRGB;
 import ch.njol.skript.util.Direction;
 import ch.njol.skript.util.SkriptColor;
-import ch.njol.skript.variables.Variables;
 import ch.njol.util.StringUtils;
 import ch.njol.util.coll.iterator.SingleItemIterator;
 import org.bukkit.*;
@@ -53,12 +52,6 @@ public class VisualEffects {
 	private static final Map<String, Consumer<VisualEffectType>> effectTypeModifiers = new HashMap<>();
 	private static SyntaxElementInfo<VisualEffect> elementInfo;
 	private static VisualEffectType[] visualEffectTypes;
-
-	static {
-		Variables.yggdrasil.registerSingleClass(VisualEffectType.class, "VisualEffect.NewType");
-		Variables.yggdrasil.registerSingleClass(Effect.class, "Bukkit_Effect");
-		Variables.yggdrasil.registerSingleClass(EntityEffect.class, "Bukkit_EntityEffect");
-	}
 
 	@Nullable
 	public static VisualEffect parse(String s) {

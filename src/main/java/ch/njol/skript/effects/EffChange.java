@@ -18,12 +18,6 @@
  */
 package ch.njol.skript.effects;
 
-import java.util.Arrays;
-import java.util.logging.Level;
-
-import org.bukkit.event.Event;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptConfig;
 import ch.njol.skript.classes.Changer;
@@ -37,7 +31,6 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.log.CountingLogHandler;
 import ch.njol.skript.log.ErrorQuality;
 import ch.njol.skript.log.ParseLogHandler;
@@ -47,6 +40,12 @@ import ch.njol.skript.util.Patterns;
 import ch.njol.skript.util.ScriptOptions;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.lang.ExprVariable;
+import org.bukkit.event.Event;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.Arrays;
+import java.util.logging.Level;
 
 /**
  * @author Peter Güttinger
@@ -80,40 +79,40 @@ public class EffChange extends Effect {
 			{"(add|give) %objects% to %~objects%", ChangeMode.ADD},
 			{"increase %~objects% by %objects%", ChangeMode.ADD},
 			{"give %~objects% %objects%", ChangeMode.ADD},
-			
+
 			{"set %~objects% to %objects%", ChangeMode.SET},
-			
+
 			{"remove (all|every) %objects% from %~objects%", ChangeMode.REMOVE_ALL},
-			
+
 			{"(remove|subtract) %objects% from %~objects%", ChangeMode.REMOVE},
 			{"reduce %~objects% by %objects%", ChangeMode.REMOVE},
-			
+
 			{"(delete|clear) %~objects%", ChangeMode.DELETE},
-			
+
 			{"reset %~objects%", ChangeMode.RESET}
 	});
-	
+
 	static {
 		Skript.registerEffect(EffChange.class, patterns.getPatterns());
 	}
-	
+
 	@SuppressWarnings("null")
 	private Expression<?> changed;
 	@Nullable
 	private Expression<?> changer = null;
-	
+
 	@SuppressWarnings("null")
 	private ChangeMode mode;
-	
+
 	private boolean single;
-	
+
 //	private Changer<?, ?> c = null;
-	
+
 	@SuppressWarnings({"unchecked", "null"})
 	@Override
 	public boolean init(final Expression<?>[] exprs, final int matchedPattern, final Kleenean isDelayed, final ParseResult parser) {
 		mode = patterns.getInfo(matchedPattern);
-		
+
 		switch (mode) {
 			case ADD:
 				if (matchedPattern == 0) {
@@ -147,7 +146,7 @@ public class EffChange extends Effect {
 			case RESET:
 				changed = exprs[0];
 		}
-		
+
 		CountingLogHandler h = new CountingLogHandler(Level.SEVERE).start();
 		Class<?>[] rs;
 		String what;
@@ -190,12 +189,12 @@ public class EffChange extends Effect {
 			}
 			return false;
 		}
-		
+
 		final Class<?>[] rs2 = new Class<?>[rs.length];
 		for (int i = 0; i < rs.length; i++)
 			rs2[i] = rs[i].isArray() ? rs[i].getComponentType() : rs[i];
 		final boolean allSingle = Arrays.equals(rs, rs2);
-		
+
 		Expression<?> ch = changer;
 		if (ch != null) {
 			Expression<?> v = null;
@@ -232,7 +231,7 @@ public class EffChange extends Effect {
 			} finally {
 				log.stop();
 			}
-			
+
 			Class<?> x = Utils.getSuperType(rs2);
 			single = allSingle;
 			for (int i = 0; i < rs.length; i++) {
@@ -244,7 +243,7 @@ public class EffChange extends Effect {
 			}
 			assert x != null;
 			changer = ch = v;
-			
+
 			if (!ch.isSingle() && single) {
 				if (mode == ChangeMode.SET)
 					Skript.error(changed + " can only be set to one " + Classes.getSuperClassInfo(x).getName() + ", not more", ErrorQuality.SEMANTIC_ERROR);
@@ -252,10 +251,10 @@ public class EffChange extends Effect {
 					Skript.error("only one " + Classes.getSuperClassInfo(x).getName() + " can be " + (mode == ChangeMode.ADD ? "added to" : "removed from") + " " + changed + ", not more", ErrorQuality.SEMANTIC_ERROR);
 				return false;
 			}
-			
-			if (changed instanceof Variable && !((Variable<?>) changed).isLocal() && (mode == ChangeMode.SET || ((Variable<?>) changed).isList() && mode == ChangeMode.ADD)) {
+
+			if (changed instanceof ExprVariable && !((ExprVariable<?>) changed).isLocal() && (mode == ChangeMode.SET || !changed.isSingle() && mode == ChangeMode.ADD)) {
 				final ClassInfo<?> ci = Classes.getSuperClassInfo(ch.getReturnType());
-				if (ci.getC() != Object.class && ci.getSerializer() == null && ci.getSerializeAs() == null && !SkriptConfig.disableObjectCannotBeSavedWarnings.value()) {
+				if (ci.getC() != Object.class && ci.getSerializer() == null && !ci.safeSerialization() && !SkriptConfig.disableObjectCannotBeSavedWarnings.value()) {
 					if (getParser().getCurrentScript() != null) {
 						if (!ScriptOptions.getInstance().suppressesWarning(getParser().getCurrentScript().getFile(), "instance var")) {
 							Skript.warning(ci.getName().withIndefiniteArticle() + " cannot be saved, i.e. the contents of the variable " + changed + " will be lost when the server stops.");
@@ -268,7 +267,7 @@ public class EffChange extends Effect {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected void execute(Event e) {
 		Object[] delta = changer == null ? null : changer.getArray(e);
@@ -281,7 +280,7 @@ public class EffChange extends Effect {
 		}
 		changed.change(e, delta, mode);
 	}
-	
+
 	@Override
 	public String toString(final @Nullable Event e, final boolean debug) {
 		final Expression<?> changer = this.changer;
@@ -306,5 +305,5 @@ public class EffChange extends Effect {
 		assert false;
 		return "";
 	}
-	
+
 }

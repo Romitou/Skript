@@ -303,9 +303,7 @@ databases:
 		# This is the last database in this list to catch all variables that have not been saved anywhere else.
 		# You can modify this database freely, but make sure to know what you're doing if you don't want to loose any variables.
 
-		type: CSV
-
-		pattern: .*
+		type: csv
 
 		file: ./plugins/Skript/variables.csv
 

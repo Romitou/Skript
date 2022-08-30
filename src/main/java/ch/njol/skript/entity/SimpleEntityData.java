@@ -18,146 +18,40 @@
  */
 package ch.njol.skript.entity;
 
-import java.io.NotSerializableException;
-import java.io.StreamCorruptedException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bukkit.entity.AbstractHorse;
-import org.bukkit.entity.Allay;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.AreaEffectCloud;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Bat;
-import org.bukkit.entity.Blaze;
-import org.bukkit.entity.CaveSpider;
-import org.bukkit.entity.ChestedHorse;
-import org.bukkit.entity.Chicken;
-import org.bukkit.entity.Cod;
-import org.bukkit.entity.Cow;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Dolphin;
-import org.bukkit.entity.Donkey;
-import org.bukkit.entity.DragonFireball;
-import org.bukkit.entity.Drowned;
-import org.bukkit.entity.Egg;
-import org.bukkit.entity.ElderGuardian;
-import org.bukkit.entity.EnderCrystal;
-import org.bukkit.entity.EnderDragon;
-import org.bukkit.entity.EnderPearl;
-import org.bukkit.entity.Endermite;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Evoker;
-import org.bukkit.entity.EvokerFangs;
-import org.bukkit.entity.Fireball;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.Fish;
-import org.bukkit.entity.FishHook;
-import org.bukkit.entity.Ghast;
-import org.bukkit.entity.Giant;
-import org.bukkit.entity.GlowItemFrame;
-import org.bukkit.entity.GlowSquid;
-import org.bukkit.entity.Golem;
-import org.bukkit.entity.Guardian;
-import org.bukkit.entity.Hoglin;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Husk;
-import org.bukkit.entity.Illager;
-import org.bukkit.entity.Illusioner;
-import org.bukkit.entity.IronGolem;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.LargeFireball;
-import org.bukkit.entity.LeashHitch;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Llama;
-import org.bukkit.entity.LlamaSpit;
-import org.bukkit.entity.MagmaCube;
-import org.bukkit.entity.Marker;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Mule;
-import org.bukkit.entity.MushroomCow;
-import org.bukkit.entity.Painting;
-import org.bukkit.entity.Phantom;
-import org.bukkit.entity.PigZombie;
-import org.bukkit.entity.Piglin;
-import org.bukkit.entity.PiglinBrute;
-import org.bukkit.entity.Pillager;
-import org.bukkit.entity.PolarBear;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.PufferFish;
-import org.bukkit.entity.Raider;
-import org.bukkit.entity.Ravager;
-import org.bukkit.entity.Salmon;
-import org.bukkit.entity.Shulker;
-import org.bukkit.entity.ShulkerBullet;
-import org.bukkit.entity.Silverfish;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.SkeletonHorse;
-import org.bukkit.entity.Slime;
-import org.bukkit.entity.SmallFireball;
-import org.bukkit.entity.Snowball;
-import org.bukkit.entity.Snowman;
-import org.bukkit.entity.SpectralArrow;
-import org.bukkit.entity.Spellcaster;
-import org.bukkit.entity.Spider;
-import org.bukkit.entity.Squid;
-import org.bukkit.entity.Stray;
-import org.bukkit.entity.Strider;
-import org.bukkit.entity.TNTPrimed;
-import org.bukkit.entity.Tadpole;
-import org.bukkit.entity.ThrownExpBottle;
-import org.bukkit.entity.TippedArrow;
-import org.bukkit.entity.Trident;
-import org.bukkit.entity.TropicalFish;
-import org.bukkit.entity.Turtle;
-import org.bukkit.entity.Vex;
-import org.bukkit.entity.Vindicator;
-import org.bukkit.entity.WanderingTrader;
-import org.bukkit.entity.Warden;
-import org.bukkit.entity.WaterMob;
-import org.bukkit.entity.Witch;
-import org.bukkit.entity.Wither;
-import org.bukkit.entity.WitherSkeleton;
-import org.bukkit.entity.WitherSkull;
-import org.bukkit.entity.Zoglin;
-import org.bukkit.entity.Zombie;
-import org.bukkit.entity.ZombieHorse;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.yggdrasil.Fields;
+import org.bukkit.entity.*;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Peter Güttinger
  */
 public class SimpleEntityData extends EntityData<Entity> {
-	
+
 	public final static class SimpleEntityDataInfo {
 		final String codeName;
 		final Class<? extends Entity> c;
 		final boolean isSupertype;
-		
+
 		SimpleEntityDataInfo(final String codeName, final Class<? extends Entity> c) {
 			this(codeName, c, false);
 		}
-		
+
 		SimpleEntityDataInfo(final String codeName, final Class<? extends Entity> c, final boolean isSupertype) {
 			this.codeName = codeName;
 			this.c = c;
 			this.isSupertype = isSupertype;
 		}
-		
+
 		@Override
 		public int hashCode() {
 			return c.hashCode();
 		}
-		
+
 		@Override
 		public boolean equals(final @Nullable Object obj) {
 			if (this == obj)
@@ -174,7 +68,7 @@ public class SimpleEntityData extends EntityData<Entity> {
 			return true;
 		}
 	}
-	
+
 	private final static List<SimpleEntityDataInfo> types = new ArrayList<>();
 
 	private static void addSimpleEntity(String codeName, Class<? extends Entity> entityclass) {
@@ -255,7 +149,7 @@ public class SimpleEntityData extends EntityData<Entity> {
 		addSimpleEntity("salmon", Salmon.class);
 		addSimpleEntity("tropical fish", TropicalFish.class);
 		addSimpleEntity("trident", Trident.class);
-		
+
 		if (Skript.classExists("org.bukkit.entity.Illusioner")) // Added in 1.12
 			addSimpleEntity("illusioner", Illusioner.class);
 
@@ -286,12 +180,12 @@ public class SimpleEntityData extends EntityData<Entity> {
 			addSimpleEntity("tadpole", Tadpole.class);
 			addSimpleEntity("warden", Warden.class);
 		}
-		
+
 		// Register zombie after Husk and Drowned to make sure both work
 		addSimpleEntity("zombie", Zombie.class);
 		// Register squid after glow squid to make sure both work
 		addSimpleEntity("squid", Squid.class);
-		
+
 		// SuperTypes
 		addSuperEntity("human", HumanEntity.class);
 		addSuperEntity("damageable", Damageable.class);
@@ -314,7 +208,7 @@ public class SimpleEntityData extends EntityData<Entity> {
 		if (Skript.classExists("org.bukkit.entity.Raider")) // Introduced in Spigot 1.14
 			addSuperEntity("raider", Raider.class);
 	}
-	
+
 	static {
 		final String[] codeNames = new String[types.size()];
 		int i = 0;
@@ -323,19 +217,19 @@ public class SimpleEntityData extends EntityData<Entity> {
 		}
 		EntityData.register(SimpleEntityData.class, "simple", Entity.class, 0, codeNames);
 	}
-	
+
 	private transient SimpleEntityDataInfo info;
-	
+
 	public SimpleEntityData() {
 		this(Entity.class);
 	}
-	
+
 	private SimpleEntityData(final SimpleEntityDataInfo info) {
 		assert info != null;
 		this.info = info;
 		matchedPattern = types.indexOf(info);
 	}
-	
+
 	public SimpleEntityData(final Class<? extends Entity> c) {
 		assert c != null && c.isInterface() : c;
 		int i = 0;
@@ -349,7 +243,7 @@ public class SimpleEntityData extends EntityData<Entity> {
 		}
 		throw new IllegalStateException();
 	}
-	
+
 	public SimpleEntityData(final Entity e) {
 		int i = 0;
 		for (final SimpleEntityDataInfo info : types) {
@@ -362,7 +256,7 @@ public class SimpleEntityData extends EntityData<Entity> {
 		}
 		throw new IllegalStateException();
 	}
-	
+
 	@SuppressWarnings("null")
 	@Override
 	protected boolean init(final Literal<?>[] exprs, final int matchedPattern, final ParseResult parseResult) {
@@ -370,16 +264,16 @@ public class SimpleEntityData extends EntityData<Entity> {
 		assert info != null : matchedPattern;
 		return true;
 	}
-	
+
 	@Override
 	protected boolean init(final @Nullable Class<? extends Entity> c, final @Nullable Entity e) {
 		assert false;
 		return false;
 	}
-	
+
 	@Override
 	public void set(final Entity entity) {}
-	
+
 	@Override
 	public boolean match(final Entity e) {
 		if (info.isSupertype)
@@ -391,17 +285,17 @@ public class SimpleEntityData extends EntityData<Entity> {
 		assert false;
 		return false;
 	}
-	
+
 	@Override
 	public Class<? extends Entity> getType() {
 		return info.c;
 	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		return info.hashCode();
 	}
-	
+
 	@Override
 	protected boolean equals_i(final EntityData<?> obj) {
 		if (!(obj instanceof SimpleEntityData))
@@ -409,53 +303,15 @@ public class SimpleEntityData extends EntityData<Entity> {
 		final SimpleEntityData other = (SimpleEntityData) obj;
 		return info.equals(other.info);
 	}
-	
-	@Override
-	public Fields serialize() throws NotSerializableException {
-		final Fields f = super.serialize();
-		f.putObject("info.codeName", info.codeName);
-		return f;
-	}
-	
-	@Override
-	public void deserialize(final Fields fields) throws StreamCorruptedException, NotSerializableException {
-		final String codeName = fields.getAndRemoveObject("info.codeName", String.class);
-		for (final SimpleEntityDataInfo i : types) {
-			if (i.codeName.equals(codeName)) {
-				info = i;
-				super.deserialize(fields);
-				return;
-			}
-		}
-		throw new StreamCorruptedException("Invalid SimpleEntityDataInfo code name " + codeName);
-	}
-	
-//		return info.c.getName();
-	@Override
-	@Deprecated
-	protected boolean deserialize(final String s) {
-		try {
-			final Class<?> c = Class.forName(s);
-			for (final SimpleEntityDataInfo i : types) {
-				if (i.c == c) {
-					info = i;
-					return true;
-				}
-			}
-			return false;
-		} catch (final ClassNotFoundException e) {
-			return false;
-		}
-	}
-	
+
 	@Override
 	public boolean isSupertypeOf(final EntityData<?> e) {
 		return info.c == e.getType() || info.isSupertype && info.c.isAssignableFrom(e.getType());
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new SimpleEntityData(info);
 	}
-	
+
 }

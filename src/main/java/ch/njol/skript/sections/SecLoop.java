@@ -25,12 +25,12 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.Section;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.TriggerItem;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.ContainerExpression;
 import ch.njol.skript.util.Container;
 import ch.njol.skript.util.Container.ContainerType;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.lang.ExprVariable;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -90,7 +90,7 @@ public class SecLoop extends Section {
 	protected TriggerItem walk(Event e) {
 		Iterator<?> iter = currentIter.get(e);
 		if (iter == null) {
-			iter = expr instanceof Variable ? ((Variable<?>) expr).variablesIterator(e) : expr.iterator(e);
+			iter = expr instanceof ExprVariable ? ((ExprVariable<?>) expr).variablesIterator(e) : expr.iterator(e);
 			if (iter != null) {
 				if (iter.hasNext())
 					currentIter.put(e, iter);

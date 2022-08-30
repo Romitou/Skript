@@ -18,60 +18,27 @@
  */
 package ch.njol.skript.classes;
 
-import java.io.NotSerializableException;
-import java.io.StreamCorruptedException;
-
+import com.skriptlang.skript.yggdrasil.YggdrasilReader;
+import com.skriptlang.skript.yggdrasil.YggdrasilSerializer;
+import com.skriptlang.skript.yggdrasil.YggdrasilWriter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.eclipse.jdt.annotation.Nullable;
 
-import ch.njol.yggdrasil.Fields;
-
 /**
  * Uses strings for serialisation because the whole ConfigurationSerializable interface is badly documented, and especially DelegateDeserialization doesn't work well with
  * Yggdrasil.
- * 
+ *
  * @author Peter Güttinger
  */
-public class ConfigurationSerializer<T extends ConfigurationSerializable> extends Serializer<T> {
-	
-	@Override
-	public Fields serialize(final T o) throws NotSerializableException {
-		final Fields f = new Fields();
-		f.putObject("value", serializeCS(o));
-		return f;
-	}
-	
-	@Override
-	public boolean mustSyncDeserialization() {
-		return false;
-	}
-	
-	@Override
-	public boolean canBeInstantiated() {
-		return false;
-	}
-
-	@Override
-	protected T deserialize(final Fields fields) throws StreamCorruptedException {
-		final String val = fields.getObject("value", String.class);
-		if (val == null)
-			throw new StreamCorruptedException();
-		final ClassInfo<? extends T> info = this.info;
-		assert info != null;
-		final T t = deserializeCS(val, info.getC());
-		if (t == null)
-			throw new StreamCorruptedException();
-		return t;
-	}
-	
+public class ConfigurationSerializer<T extends ConfigurationSerializable> extends YggdrasilSerializer<T> {
 	public static String serializeCS(final ConfigurationSerializable o) {
 		final YamlConfiguration y = new YamlConfiguration();
 		y.set("value", o);
 		return "" + y.saveToString();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static <T extends ConfigurationSerializable> T deserializeCS(final String s, final Class<T> c) {
@@ -86,28 +53,13 @@ public class ConfigurationSerializer<T extends ConfigurationSerializable> extend
 			return null;
 		return (T) o;
 	}
-	
-	@Override
+
 	@Nullable
 	public <E extends T> E newInstance(final Class<E> c) {
 		assert false;
 		return null;
 	}
-	
-	@Override
-	public void deserialize(final T o, final Fields fields) throws StreamCorruptedException {
-		assert false;
-	}
-	
-	@Override
-	@Deprecated
-	@Nullable
-	public T deserialize(final String s) {
-		final ClassInfo<? extends T> info = this.info;
-		assert info != null;
-		return deserializeCSOld(s, info.getC());
-	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Deprecated
 	@Nullable
@@ -123,5 +75,18 @@ public class ConfigurationSerializer<T extends ConfigurationSerializable> extend
 			return null;
 		return (T) o;
 	}
-	
+
+	@Override
+	public void serialize(YggdrasilWriter writer, @Nullable T value) {
+		writer.writeString("value", serializeCS(value));
+	}
+
+	@Override
+	public @Nullable T deserialize(YggdrasilReader reader) {
+		final String value = reader.readString("value");
+		if (value == null)
+			return null;
+		final ClassInfo<? extends T> info = this.getClassInfo();
+		return deserializeCS(value, info.getC());
+	}
 }

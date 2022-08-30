@@ -18,27 +18,25 @@
  */
 package ch.njol.skript.lang;
 
-import java.io.File;
-import java.util.List;
-
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
-import ch.njol.skript.variables.Variables;
+import java.io.File;
+import java.util.List;
 
 /**
  * @author Peter Güttinger
  */
 public class Trigger extends TriggerSection {
-	
+
 	private final String name;
 	private final SkriptEvent event;
-	
+
 	@Nullable
 	private final File script;
 	private int line = -1; // -1 is default: it means there is no line number available
 	private String debugLabel;
-	
+
 	public Trigger(final @Nullable File script, final String name, final SkriptEvent event, final List<TriggerItem> items) {
 		super(items);
 		this.script = script;
@@ -46,7 +44,7 @@ public class Trigger extends TriggerSection {
 		this.event = event;
 		this.debugLabel = "unknown trigger";
 	}
-	
+
 	/**
 	 * Executes this trigger for certain event.
 	 * @param e Event.
@@ -54,35 +52,33 @@ public class Trigger extends TriggerSection {
 	 */
 	public boolean execute(final Event e) {
 		boolean success = TriggerItem.walk(this, e);
-		// Clear local variables
-		Variables.removeLocals(e);
 		/*
 		 * Local variables can be used in delayed effects by backing reference
 		 * of VariablesMap up. Basically:
-		 * 
+		 *
 		 * Object localVars = Variables.removeLocals(e);
-		 * 
+		 *
 		 * ... and when you want to continue execution:
-		 * 
+		 *
 		 * Variables.setLocalVariables(e, localVars);
-		 * 
+		 *
 		 * See Delay effect for reference.
 		 */
-		
+
 		return success;
 	}
-	
+
 	@Override
 	@Nullable
 	protected TriggerItem walk(final Event e) {
 		return walk(e, true);
 	}
-	
+
 	@Override
 	public String toString(final @Nullable Event e, final boolean debug) {
 		return name + " (" + event.toString(e, debug) + ")";
 	}
-	
+
 	/**
 	 * Gets name of this trigger.
 	 * @return Name of trigger.
@@ -90,11 +86,11 @@ public class Trigger extends TriggerSection {
 	public String getName() {
 		return name;
 	}
-	
+
 	public SkriptEvent getEvent() {
 		return event;
 	}
-	
+
 	@Nullable
 	public File getScript() {
 		return script;
@@ -108,7 +104,7 @@ public class Trigger extends TriggerSection {
 	public void setLineNumber(int line) {
 		this.line  = line;
 	}
-	
+
 	/**
 	 * Gets line number for this trigger's start.
 	 * Only use it for debugging!
@@ -117,13 +113,13 @@ public class Trigger extends TriggerSection {
 	public int getLineNumber() {
 		return line;
 	}
-	
+
 	public void setDebugLabel(String label) {
 		this.debugLabel = label;
 	}
-	
+
 	public String getDebugLabel() {
 		return debugLabel;
 	}
-	
+
 }

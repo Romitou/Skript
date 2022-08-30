@@ -18,16 +18,14 @@
  */
 package ch.njol.skript.entity;
 
+import ch.njol.skript.Skript;
+import ch.njol.skript.lang.Literal;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
 import org.bukkit.entity.Horse.Variant;
 import org.eclipse.jdt.annotation.Nullable;
-
-import ch.njol.skript.Skript;
-import ch.njol.skript.lang.Literal;
-import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.variables.Variables;
 
 /**
  * @author Peter Güttinger
@@ -39,26 +37,22 @@ public class HorseData extends EntityData<Horse> {
 			if (!Skript.isRunningMinecraft(1, 11)) // For 1.11+ see SimpleEntityData
 				EntityData.register(HorseData.class, "horse", Horse.class, 0,
 						"horse", "donkey", "mule", "undead horse", "skeleton horse");
-			
-			Variables.yggdrasil.registerSingleClass(Variant.class, "Horse.Variant");
-			Variables.yggdrasil.registerSingleClass(Color.class, "Horse.Color");
-			Variables.yggdrasil.registerSingleClass(Style.class, "Horse.Style");
 		}
 	}
-	
+
 	@Nullable
 	private Variant variant;
 	@Nullable
 	private Color color;
 	@Nullable
 	private Style style;
-	
+
 	public HorseData() {}
-	
+
 	public HorseData(final @Nullable Variant variant) {
 		this.variant = variant;
 	}
-	
+
 	@Override
 	protected boolean init(final Literal<?>[] exprs, final int matchedPattern, final ParseResult parseResult) {
 		switch (matchedPattern) { // If Variant ordering is changed, will not break
@@ -78,10 +72,10 @@ public class HorseData extends EntityData<Horse> {
 				variant = Variant.SKELETON_HORSE;
 				break;
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
 	protected boolean init(final @Nullable Class<? extends Horse> c, final @Nullable Horse e) {
 		if (e != null) {
@@ -91,19 +85,19 @@ public class HorseData extends EntityData<Horse> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected boolean match(final Horse entity) {
 		return (variant == null || variant == entity.getVariant())
 				&& (color == null || color == entity.getColor())
 				&& (style == null || style == entity.getStyle());
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new HorseData(variant);
 	}
-	
+
 	@Override
 	public void set(final Horse entity) {
 		if (variant != null)
@@ -113,7 +107,7 @@ public class HorseData extends EntityData<Horse> {
 		if (style != null)
 			entity.setStyle(style);
 	}
-	
+
 	@Override
 	public boolean isSupertypeOf(final EntityData<?> e) {
 		if (!(e instanceof HorseData))
@@ -123,28 +117,12 @@ public class HorseData extends EntityData<Horse> {
 				&& (color == null || color == d.color)
 				&& (style == null || style == d.style);
 	}
-	
+
 	@Override
 	public Class<? extends Horse> getType() {
 		return Horse.class;
 	}
-	
-//		return (variant == null ? "" : variant.name()) + "," + (color == null ? "" : color.name()) + "," + (style == null ? "" : style.name());
-	@Override
-	protected boolean deserialize(final String s) {
-		final String[] split = s.split(",");
-		if (split.length != 3)
-			return false;
-		try {
-			variant = split[0].isEmpty() ? null : Variant.valueOf(split[0]);
-			color = split[1].isEmpty() ? null : Color.valueOf(split[1]);
-			style = split[2].isEmpty() ? null : Style.valueOf(split[2]);
-		} catch (final IllegalArgumentException e) {
-			return false;
-		}
-		return true;
-	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		final int prime = 31;
@@ -154,7 +132,7 @@ public class HorseData extends EntityData<Horse> {
 		result = prime * result + (variant != null ? variant.hashCode() : 0);
 		return result;
 	}
-	
+
 	@Override
 	protected boolean equals_i(final EntityData<?> obj) {
 		if (!(obj instanceof HorseData))
@@ -168,5 +146,5 @@ public class HorseData extends EntityData<Horse> {
 			return false;
 		return true;
 	}
-	
+
 }

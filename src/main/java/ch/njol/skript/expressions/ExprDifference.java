@@ -18,11 +18,6 @@
  */
 package ch.njol.skript.expressions;
 
-import java.lang.reflect.Array;
-
-import org.bukkit.event.Event;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Arithmetic;
 import ch.njol.skript.classes.ClassInfo;
@@ -35,13 +30,17 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.log.ErrorQuality;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.registrations.DefaultClasses;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.old.Variable;
+import org.bukkit.event.Event;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.lang.reflect.Array;
 
 /**
  * @author Peter Güttinger
@@ -52,20 +51,20 @@ import ch.njol.util.Kleenean;
 		"\tmessage \"You have to wait a minute before using this command again!\""})
 @Since("1.4")
 public class ExprDifference extends SimpleExpression<Object> {
-	
+
 	static {
 		Skript.registerExpression(ExprDifference.class, Object.class, ExpressionType.COMBINED, "difference (between|of) %object% and %object%");
 	}
-	
+
 	@SuppressWarnings("null")
 	private Expression<?> first, second;
-	
+
 	@SuppressWarnings("rawtypes")
 	@Nullable
 	private Arithmetic math;
 	@SuppressWarnings("null")
 	private Class<?> relativeType;
-	
+
 	@SuppressWarnings({"unchecked", "null", "unused"})
 	@Override
 	public boolean init(final Expression<?>[] exprs, final int matchedPattern, final Kleenean isDelayed, final ParseResult parseResult) {
@@ -112,7 +111,7 @@ public class ExprDifference extends SimpleExpression<Object> {
 		}
 		return true;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
@@ -121,7 +120,7 @@ public class ExprDifference extends SimpleExpression<Object> {
 		if (f == null || s == null)
 			return null;
 		final Object[] one = (Object[]) Array.newInstance(relativeType, 1);
-		
+
 		// If we're comparing object expressions, such as variables, math is null right now
 		if (relativeType.equals(Object.class)) {
 			ClassInfo<?> info = Classes.getSuperClassInfo(Utils.getSuperType(f.getClass(), s.getClass()));
@@ -130,26 +129,26 @@ public class ExprDifference extends SimpleExpression<Object> {
 				return one;
 			}
 		}
-		
+
 		assert math != null; // NOW it cannot be null
 		one[0] = math.difference(f, s);
-		
+
 		return one;
 	}
-	
+
 	@Override
 	public Class<? extends Object> getReturnType() {
 		return relativeType;
 	}
-	
+
 	@Override
 	public String toString(final @Nullable Event e, final boolean debug) {
 		return "difference between " + first.toString(e, debug) + " and " + second.toString(e, debug);
 	}
-	
+
 	@Override
 	public boolean isSingle() {
 		return true;
 	}
-	
+
 }

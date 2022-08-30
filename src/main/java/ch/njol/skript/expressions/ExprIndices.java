@@ -26,15 +26,14 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.registrations.Comparators;
 import ch.njol.skript.util.LiteralUtils;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.lang.ExprVariable;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
-import java.util.Map;
 import java.util.Map.Entry;
 
 @Name("Indices of List")
@@ -67,7 +66,7 @@ public class ExprIndices extends SimpleExpression<String> {
 	}
 
 	@SuppressWarnings({"null", "NotNullFieldNotInitialized"})
-	private Variable<?> list;
+	private ExprVariable<?> list;
 
 	private boolean sort;
 	private boolean descending;
@@ -76,8 +75,8 @@ public class ExprIndices extends SimpleExpression<String> {
 	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
 		sort = matchedPattern > 1;
 		descending = parseResult.mark == 1;
-		if (exprs[0] instanceof Variable<?> && ((Variable<?>) exprs[0]).isList()) {
-			list = (Variable<?>) exprs[0];
+		if (exprs[0] instanceof ExprVariable<?> && !exprs[0].isSingle()) {
+			list = (ExprVariable<?>) exprs[0];
 			return true;
 		}
 
@@ -93,21 +92,23 @@ public class ExprIndices extends SimpleExpression<String> {
 	@Override
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
 	protected String[] get(Event e) {
-		Map<String, Object> variable = (Map<String, Object>) list.getRaw(e);
-
-		if (variable == null) {
-			return null;
-		}
-
-		if (sort) {
-			int direction = descending ? -1 : 1;
-			return variable.entrySet().stream()
-				.sorted((a, b) -> compare(a, b, direction))
-				.map(Entry::getKey)
-				.toArray(String[]::new);
-		}
-
-		return variable.keySet().toArray(new String[0]);
+		// TODO
+//		Map<String, Object> variable = (Map<String, Object>) list.getArray(e);
+//
+//		if (variable == null) {
+//			return null;
+//		}
+//
+//		if (sort) {
+//			int direction = descending ? -1 : 1;
+//			return variable.entrySet().stream()
+//				.sorted((a, b) -> compare(a, b, direction))
+//				.map(Entry::getKey)
+//				.toArray(String[]::new);
+//		}
+//
+//		return variable.keySet().toArray(new String[0]);
+		return new String[0];
 	}
 
 	@Override

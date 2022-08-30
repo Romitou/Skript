@@ -21,13 +21,11 @@ package ch.njol.skript.hooks.regions.classes;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.ClassInfo;
 import ch.njol.skript.classes.Parser;
-import ch.njol.skript.classes.YggdrasilSerializer;
 import ch.njol.skript.hooks.regions.RegionsPlugin;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.VariableString;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.registrations.Converters;
-import ch.njol.yggdrasil.YggdrasilSerializable.YggdrasilExtendedSerializable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -41,17 +39,17 @@ import java.util.Iterator;
 /**
  * @author Peter Güttinger
  */
-public abstract class Region implements YggdrasilExtendedSerializable {
+public abstract class Region {
 	static {
 		Classes.registerClass(new ClassInfo<>(Region.class, "region")
-				.name("Region")
-				.description("A region of a regions plugin. Skript currently supports WorldGuard, Factions, GriefPrevention and PreciousStones.",
-						"Please note that some regions plugins do not have named regions, some use numerical ids to identify regions, and some may have regions with the same name in different worlds, "
-								+ "thus using regions like \"region name\" in scripts may or may not work.")
-				.usage("\"region name\"")
-				.examples("")
-				.after("string", "world", "offlineplayer", "player")
-				.since("2.1")
+			.name("Region")
+			.description("A region of a regions plugin. Skript currently supports WorldGuard, Factions, GriefPrevention and PreciousStones.",
+				"Please note that some regions plugins do not have named regions, some use numerical ids to identify regions, and some may have regions with the same name in different worlds, "
+					+ "thus using regions like \"region name\" in scripts may or may not work.")
+			.usage("\"region name\"")
+			.examples("")
+			.after("string", "world", "offlineplayer", "player")
+			.since("2.1")
 				.user("regions?")
 				.parser(new Parser<Region>() {
 					@Override
@@ -77,21 +75,15 @@ public abstract class Region implements YggdrasilExtendedSerializable {
 						s = VariableString.unquote(s, quoted);
 						return Region.parse(s, true);
 					}
-					
+
 					@Override
 					public String toString(final Region r, final int flags) {
 						return r.toString();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Region r) {
 						return r.toString();
-					}
-                })
-				.serializer(new YggdrasilSerializer<Region>() {
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
 					}
 				}));
 		Converters.registerConverter(String.class, Region.class, s -> Region.parse(s, false));
@@ -118,28 +110,28 @@ public abstract class Region implements YggdrasilExtendedSerializable {
 		}
 		return r;
 	}
-	
+
 	public abstract boolean contains(Location l);
-	
+
 	public abstract boolean isMember(OfflinePlayer p);
-	
+
 	public abstract Collection<OfflinePlayer> getMembers();
-	
+
 	public abstract boolean isOwner(OfflinePlayer p);
-	
+
 	public abstract Collection<OfflinePlayer> getOwners();
-	
+
 	public abstract Iterator<Block> getBlocks();
-	
+
 	@Override
 	public abstract String toString();
-	
+
 	public abstract RegionsPlugin<?> getPlugin();
-	
+
 	@Override
 	public abstract boolean equals(@Nullable Object o);
-	
+
 	@Override
 	public abstract int hashCode();
-	
+
 }

@@ -18,6 +18,7 @@
  */
 package ch.njol.skript.expressions;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.bukkit.event.Event;
@@ -44,7 +45,7 @@ import ch.njol.util.StringUtils;
 		"set {_s::*} to the string argument split at \",\""})
 @Since("2.1, 2.5.2 (regex support)")
 public class ExprJoinSplit extends SimpleExpression<String> {
-	
+
 	static {
 		Skript.registerExpression(ExprJoinSplit.class, String.class, ExpressionType.COMBINED,
 			"(concat[enate]|join) %strings% [(with|using|by) [[the] delimiter] %-string%]",
@@ -53,15 +54,15 @@ public class ExprJoinSplit extends SimpleExpression<String> {
 			"regex split %string% (at|using|by) [[the] delimiter] %string%",
 			"regex %string% split (at|using|by) [[the] delimiter] %string%");
 	}
-	
+
 	private boolean join;
 	private boolean regex;
-	
+
 	@SuppressWarnings("null")
 	private Expression<String> strings;
 	@Nullable
 	private Expression<String> delimiter;
-	
+
 	@SuppressWarnings({"unchecked", "null"})
 	@Override
 	public boolean init(final Expression<?>[] exprs, final int matchedPattern, final Kleenean isDelayed, final ParseResult parseResult) {
@@ -71,7 +72,7 @@ public class ExprJoinSplit extends SimpleExpression<String> {
 		delimiter = (Expression<String>) exprs[1];
 		return true;
 	}
-	
+
 	@Override
 	@Nullable
 	protected String[] get(final Event e) {
@@ -85,20 +86,20 @@ public class ExprJoinSplit extends SimpleExpression<String> {
 			return s[0].split(regex ? d : Pattern.quote(d), -1);
 		}
 	}
-	
+
 	@Override
 	public boolean isSingle() {
 		return join;
 	}
-	
+
 	@Override
 	public Class<? extends String> getReturnType() {
 		return String.class;
 	}
-	
+
 	@Override
 	public String toString(final @Nullable Event e, final boolean debug) {
 		return join ? "join " + strings.toString(e, debug) + (delimiter != null ? " with " + delimiter.toString(e, debug) : "") : ((regex ? "regex " : "") + "split " + strings.toString(e, debug) + (delimiter != null ? " at " + delimiter.toString(e, debug) : ""));
 	}
-	
+
 }

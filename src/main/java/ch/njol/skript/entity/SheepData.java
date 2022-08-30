@@ -18,11 +18,6 @@
  */
 package ch.njol.skript.entity;
 
-import java.util.Arrays;
-
-import org.bukkit.entity.Sheep;
-import org.eclipse.jdt.annotation.Nullable;
-
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
@@ -32,6 +27,10 @@ import ch.njol.skript.localization.Noun;
 import ch.njol.skript.util.Color;
 import ch.njol.skript.util.SkriptColor;
 import ch.njol.util.coll.CollectionUtils;
+import org.bukkit.entity.Sheep;
+import org.eclipse.jdt.annotation.Nullable;
+
+import java.util.Arrays;
 
 /**
  * @author Peter Güttinger
@@ -40,11 +39,11 @@ public class SheepData extends EntityData<Sheep> {
 	static {
 		EntityData.register(SheepData.class, "sheep", Sheep.class, 1, "unsheared sheep", "sheep", "sheared sheep");
 	}
-	
+
 	@Nullable
 	private Color[] colors;
 	private int sheared = 0;
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected boolean init(final Literal<?>[] exprs, final int matchedPattern, final ParseResult parseResult) {
@@ -53,7 +52,7 @@ public class SheepData extends EntityData<Sheep> {
 			colors = ((Literal<Color>) exprs[0]).getAll();
 		return true;
 	}
-	
+
 	@SuppressWarnings("null")
 	@Override
 	protected boolean init(@Nullable Class<? extends Sheep> c, @Nullable Sheep e) {
@@ -63,7 +62,7 @@ public class SheepData extends EntityData<Sheep> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void set(final Sheep entity) {
 		if (colors != null) {
@@ -72,21 +71,21 @@ public class SheepData extends EntityData<Sheep> {
 			entity.setColor(c.asDyeColor());
 		}
 	}
-	
+
 	@Override
 	public boolean match(final Sheep entity) {
 		return (sheared == 0 || entity.isSheared() == (sheared == 1))
 				&& (colors == null || SimpleExpression.check(colors, c -> entity.getColor() == c.asDyeColor(), false, false));
 	}
-	
+
 	@Override
 	public Class<Sheep> getType() {
 		return Sheep.class;
 	}
-	
+
 	@Nullable
 	private Adjective[] adjectives = null;
-	
+
 	@Override
 	public String toString(final int flags) {
 		final Color[] colors = this.colors;
@@ -104,7 +103,7 @@ public class SheepData extends EntityData<Sheep> {
 		return name.getArticleWithSpace(flags) + (age == null ? "" : age.toString(name.getGender(), flags) + " ")
 				+ Adjective.toString(adjectives, name.getGender(), flags, false) + " " + name.toString(flags & Language.NO_ARTICLE_MASK);
 	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		final int prime = 31;
@@ -113,7 +112,7 @@ public class SheepData extends EntityData<Sheep> {
 		result = prime * result + sheared;
 		return result;
 	}
-	
+
 	@Override
 	protected boolean equals_i(final EntityData<?> obj) {
 		if (!(obj instanceof SheepData))
@@ -125,7 +124,7 @@ public class SheepData extends EntityData<Sheep> {
 			return false;
 		return true;
 	}
-	
+
 //		if (colors != null) {
 //			final StringBuilder b = new StringBuilder();
 //			b.append(sheared);
@@ -139,47 +138,17 @@ public class SheepData extends EntityData<Sheep> {
 //		} else {
 //			return "" + sheared;
 //		}
-	@Override
-	protected boolean deserialize(final String s) {
-		final String[] split = s.split("\\|");
-		final String sh;
-		if (split.length == 1) {
-			sh = s;
-		} else if (split.length == 2) {
-			sh = split[0];
-			final String[] cs = split[1].split(",");
-			colors = new Color[cs.length];
-			for (int i = 0; i < cs.length; i++) {
-				try {
-					final String c = cs[i];
-					assert c != null;
-					assert colors != null;
-					colors[i] = SkriptColor.valueOf(c);
-				} catch (final IllegalArgumentException e) {
-					return false;
-				}
-			}
-		} else {
-			return false;
-		}
-		try {
-			sheared = Integer.parseInt(sh);
-			return true;
-		} catch (final NumberFormatException e) {
-			return false;
-		}
-	}
-	
+
 	@Override
 	public boolean isSupertypeOf(final EntityData<?> e) {
 		if (e instanceof SheepData)
 			return colors == null || CollectionUtils.isSubset(colors, ((SheepData) e).colors);
 		return false;
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new SheepData();
 	}
-	
+
 }

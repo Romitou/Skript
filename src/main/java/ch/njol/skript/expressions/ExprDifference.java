@@ -20,6 +20,7 @@ package ch.njol.skript.expressions;
 
 import java.lang.reflect.Array;
 
+import com.skriptlang.skript.lang.ExprVariable;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -35,7 +36,6 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.log.ErrorQuality;
 import ch.njol.skript.registrations.Classes;
@@ -52,27 +52,27 @@ import ch.njol.util.Kleenean;
 		"\tmessage \"You have to wait a minute before using this command again!\""})
 @Since("1.4")
 public class ExprDifference extends SimpleExpression<Object> {
-	
+
 	static {
 		Skript.registerExpression(ExprDifference.class, Object.class, ExpressionType.COMBINED, "difference (between|of) %object% and %object%");
 	}
-	
+
 	@SuppressWarnings("null")
 	private Expression<?> first, second;
-	
+
 	@SuppressWarnings("rawtypes")
 	@Nullable
 	private Arithmetic math;
 	@SuppressWarnings("null")
 	private Class<?> relativeType;
-	
+
 	@SuppressWarnings({"unchecked", "null", "unused"})
 	@Override
 	public boolean init(final Expression<?>[] exprs, final int matchedPattern, final Kleenean isDelayed, final ParseResult parseResult) {
 		first = exprs[0];
 		second = exprs[1];
 		final ClassInfo<?> ci;
-		if (first instanceof Variable && second instanceof Variable) {
+		if (first instanceof ExprVariable<?> && second instanceof ExprVariable<?>) {
 			ci = DefaultClasses.OBJECT;
 		} else if (first instanceof Literal<?> && second instanceof Literal<?>) {
 			first = first.getConvertedExpression(Object.class);
@@ -90,9 +90,9 @@ public class ExprDifference extends SimpleExpression<Object> {
 				if (second == null)
 					return false;
 			}
-			if (first instanceof Variable) {
+			if (first instanceof ExprVariable<?>) {
 				first = first.getConvertedExpression(second.getReturnType());
-			} else if (second instanceof Variable) {
+			} else if (second instanceof ExprVariable<?>) {
 				second = second.getConvertedExpression(first.getReturnType());
 			}
 			assert first != null && second != null;
@@ -112,7 +112,7 @@ public class ExprDifference extends SimpleExpression<Object> {
 		}
 		return true;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
@@ -121,7 +121,7 @@ public class ExprDifference extends SimpleExpression<Object> {
 		if (f == null || s == null)
 			return null;
 		final Object[] one = (Object[]) Array.newInstance(relativeType, 1);
-		
+
 		// If we're comparing object expressions, such as variables, math is null right now
 		if (relativeType.equals(Object.class)) {
 			ClassInfo<?> info = Classes.getSuperClassInfo(Utils.getSuperType(f.getClass(), s.getClass()));
@@ -130,26 +130,26 @@ public class ExprDifference extends SimpleExpression<Object> {
 				return one;
 			}
 		}
-		
+
 		assert math != null; // NOW it cannot be null
 		one[0] = math.difference(f, s);
-		
+
 		return one;
 	}
-	
+
 	@Override
 	public Class<? extends Object> getReturnType() {
 		return relativeType;
 	}
-	
+
 	@Override
 	public String toString(final @Nullable Event e, final boolean debug) {
 		return "difference between " + first.toString(e, debug) + " and " + second.toString(e, debug);
 	}
-	
+
 	@Override
 	public boolean isSingle() {
 		return true;
 	}
-	
+
 }

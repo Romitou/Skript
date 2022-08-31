@@ -18,54 +18,31 @@
  */
 package ch.njol.skript.classes;
 
+import com.skriptlang.skript.yggdrasil.YggdrasilReader;
+import com.skriptlang.skript.yggdrasil.YggdrasilSerializer;
+import com.skriptlang.skript.yggdrasil.YggdrasilWriter;
 import org.eclipse.jdt.annotation.Nullable;
-
-import ch.njol.yggdrasil.ClassResolver;
-import ch.njol.yggdrasil.Fields;
 
 /**
  * Mainly kept for backwards compatibility, but also serves as {@link ClassResolver} for enums.
- * 
+ *
  * @author Peter Güttinger
  */
-public class EnumSerializer<T extends Enum<T>> extends Serializer<T> {
-	
+public class EnumSerializer<T extends Enum<T>> extends YggdrasilSerializer<T> {
+
 	private final Class<T> c;
-	
+
 	public EnumSerializer(final Class<T> c) {
 		this.c = c;
 	}
-	
+
 	@Override
-	@Deprecated
-	@Nullable
-	public T deserialize(final String s) {
-		try {
-			return Enum.valueOf(c, s);
-		} catch (final IllegalArgumentException e) {
-			return null;
-		}
-	}
-	
-	@Override
-	public boolean mustSyncDeserialization() {
-		return false;
-	}
-	
-	@Override
-	public boolean canBeInstantiated() {
-		assert false;
-		return false;
-	}
-	
-	@Override
-	public Fields serialize(final T t) {
+	public void serialize(YggdrasilWriter writer, @Nullable T object) {
 		throw new IllegalStateException(); // not used
 	}
-	
+
 	@Override
-	public void deserialize(final T o, final Fields f) {
-		assert false;
+	public @Nullable T deserialize(YggdrasilReader reader) {
+		return Enum.valueOf(c, reader.readString("enum"));
 	}
-	
 }

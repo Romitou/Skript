@@ -22,15 +22,10 @@ import ch.njol.skript.Skript;
 import ch.njol.skript.aliases.Aliases;
 import ch.njol.skript.aliases.ItemData;
 import ch.njol.skript.aliases.ItemType;
+import ch.njol.skript.aliases.MaterialRegistry;
 import ch.njol.skript.bukkitutil.EnchantmentUtils;
 import ch.njol.skript.bukkitutil.ItemUtils;
-import ch.njol.skript.classes.Arithmetic;
-import ch.njol.skript.classes.Changer;
-import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.classes.EnumSerializer;
-import ch.njol.skript.classes.Parser;
-import ch.njol.skript.classes.Serializer;
-import ch.njol.skript.classes.YggdrasilSerializer;
+import ch.njol.skript.classes.*;
 import ch.njol.skript.expressions.base.EventValueExpression;
 import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.lang.util.SimpleLiteral;
@@ -54,13 +49,17 @@ import ch.njol.skript.util.WeatherType;
 import ch.njol.skript.util.slot.Slot;
 import ch.njol.skript.util.visual.VisualEffect;
 import ch.njol.skript.util.visual.VisualEffects;
-import ch.njol.yggdrasil.Fields;
+import com.skriptlang.skript.yggdrasil.YggdrasilReader;
+import com.skriptlang.skript.yggdrasil.YggdrasilSerializer;
+import com.skriptlang.skript.yggdrasil.YggdrasilWriter;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.eclipse.jdt.annotation.Nullable;
 
-import java.io.StreamCorruptedException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -70,7 +69,7 @@ import java.util.regex.Pattern;
 @SuppressWarnings("rawtypes")
 public class SkriptClasses {
 	public SkriptClasses() {}
-	
+
 	static {
 		Classes.registerClass(new ClassInfo<>(ClassInfo.class, "classinfo")
 				.user("types?")
@@ -91,65 +90,38 @@ public class SkriptClasses {
 					public ClassInfo parse(final String s, final ParseContext context) {
 						return Classes.getClassInfoFromUserInput(Noun.stripIndefiniteArticle(s));
 					}
-					
+
 					@Override
 					public String toString(final ClassInfo c, final int flags) {
 						return c.toString(flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final ClassInfo c) {
 						return c.getCodeName();
 					}
-					
+
 					@Override
 					public String getDebugMessage(final ClassInfo c) {
 						return c.getCodeName();
 					}
 
 				})
-				.serializer(new Serializer<ClassInfo>() {
+				.serializer(new YggdrasilSerializer<ClassInfo>() {
 					@Override
-					public Fields serialize(final ClassInfo c) {
-						final Fields f = new Fields();
-						f.putObject("codeName", c.getCodeName());
-						return f;
+					public void serialize(YggdrasilWriter writer, ClassInfo ci) {
+						writer.writeString("codeName", ci.getCodeName());
 					}
-					
+
 					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@Override
-					public void deserialize(final ClassInfo o, final Fields f) throws StreamCorruptedException {
-						assert false;
-					}
-					
-					@Override
-					protected ClassInfo deserialize(final Fields fields) throws StreamCorruptedException {
-						final String codeName = fields.getObject("codeName", String.class);
+					public @Nullable ClassInfo deserialize(YggdrasilReader reader) {
+						final String codeName = reader.readString("codeName");
 						if (codeName == null)
-							throw new StreamCorruptedException();
-						final ClassInfo<?> ci = Classes.getClassInfoNoError(codeName);
-						if (ci == null)
-							throw new StreamCorruptedException("Invalid ClassInfo " + codeName);
-						return ci;
-					}
-					
-//					return c.getCodeName();
-					@Override
-					@Nullable
-					public ClassInfo deserialize(final String s) {
-						return Classes.getClassInfoNoError(s);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
+							return null;
+						return Classes.getClassInfoNoError(codeName);
 					}
 				}));
-		
+
 		Classes.registerClass(new ClassInfo<>(WeatherType.class, "weathertype")
 				.user("weather ?types?", "weather conditions?", "weathers?")
 				.name("Weather Type")
@@ -166,12 +138,12 @@ public class SkriptClasses {
 					public WeatherType parse(final String s, final ParseContext context) {
 						return WeatherType.parse(s);
 					}
-					
+
 					@Override
 					public String toString(final WeatherType o, final int flags) {
 						return o.toString(flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final WeatherType o) {
 						return "" + o.name().toLowerCase(Locale.ENGLISH);
@@ -179,7 +151,7 @@ public class SkriptClasses {
 
 				})
 				.serializer(new EnumSerializer<>(WeatherType.class)));
-		
+
 		Classes.registerClass(new ClassInfo<>(ItemType.class, "itemtype")
 				.user("item ?types?", "items", "materials")
 				.name("Item Type")
@@ -217,28 +189,118 @@ public class SkriptClasses {
 					@Override
 					public String toVariableNameString(final ItemType t) {
 						final StringBuilder b = new StringBuilder("itemtype:");
-						b.append(t.getInternalAmount());
-						b.append("," + t.isAll());
+						b.append(t.getInternalAmount())
+							.append(",").append(t.isAll());
 						// TODO this is missing information
-						for (final ItemData d : t.getTypes()) {
-							b.append("," + d.getType());
-						}
+						for (final ItemData d : t.getTypes())
+							b.append(",").append(d.getType());
 						final EnchantmentType[] enchs = t.getEnchantmentTypes();
-						if (enchs != null) {
-							b.append("|");
-							for (final EnchantmentType ench : enchs) {
-								Enchantment e = ench.getType();
-								if (e == null)
-									continue;
-								b.append("#" + EnchantmentUtils.getKey(e));
-								b.append(":" + ench.getLevel());
-							}
+						b.append("|");
+						for (final EnchantmentType ench : enchs) {
+							Enchantment e = ench.getType();
+							if (e == null)
+								continue;
+							b.append("#").append(EnchantmentUtils.getKey(e))
+								.append(":").append(ench.getLevel());
 						}
-						return "" + b.toString();
+						return b.toString();
 					}
 				})
 				.cloner(ItemType::clone)
-				.serializer(new YggdrasilSerializer<>()));
+			.serializer(new YggdrasilSerializer<ItemType>() {
+				private MaterialRegistry MATERIAL_REGISTRY = ItemData.getMaterialRegistry();
+
+				public void serializeItemData(YggdrasilWriter writer, String fieldName, ItemData itemData) {
+					writer.writeInt(fieldName+"id", MATERIAL_REGISTRY.getId(itemData.getType()))
+						.writeString(fieldName+"meta", ConfigurationSerializer.serializeCS(itemData.getItemMeta()))
+						.writeBoolean(fieldName+"anything", itemData.isAnything())
+						.writeBoolean(fieldName+"item", itemData.isItemForm())
+						.writeBoolean(fieldName+"alias", itemData.isAlias())
+						.writeBoolean(fieldName+"plain", itemData.isPlain())
+						.writeInt(fieldName+"flags", itemData.getItemFlags());
+				}
+
+				public ItemData deserializeItemData(YggdrasilReader reader, String fieldName) {
+					Material material = MATERIAL_REGISTRY.getMaterial(reader.readInt(fieldName+"id"));
+					ItemData itemData = new ItemData(material);
+					ItemMeta itemMeta = ConfigurationSerializer.deserializeCS(reader.readString(fieldName+"meta"), ItemMeta.class);
+					if (itemMeta != null)
+						itemData.setItemMeta(itemMeta);
+
+					itemData.setAnything(reader.readBoolean("anything"));
+					itemData.setItemForm(reader.readBoolean("item"));
+					itemData.setAlias(reader.readBoolean("alias"));
+					itemData.setPlain(reader.readBoolean("plain"));
+					itemData.setItemFlags(reader.readInt("flags"));
+
+					return itemData;
+				}
+
+				/**
+				 * Serializes the ItemType into an YggdrasilWriter.
+				 * According to {@link ItemMeta#getAsString()}, we should use a ConfigurationSerializer to
+				 * serialize item's meta.
+				 */
+				@Override
+				public void serialize(YggdrasilWriter writer, ItemType itemType) {
+					writer.writeBoolean("all", itemType.isAll())
+						.writeInt("amount", itemType.getInternalAmount());
+
+					if (itemType.getBlock() != null) {
+						YggdrasilWriter blockWriter = new YggdrasilWriter(null);
+						serialize(blockWriter, itemType.getBlock());
+						List<ItemData> dataList = itemType.getTypes();
+						for (int i = 0; i < dataList.size(); i++)
+							serializeItemData(blockWriter, "itemData::"+i+"::", dataList.get(i));
+						blockWriter.toReader().readAll().forEach((k, v) -> writer.write("block::"+k, v));
+					}
+
+					if (itemType.getItem() != null) {
+						YggdrasilWriter itemWriter = new YggdrasilWriter(null);
+						serialize(itemWriter, itemType.getItem());
+						List<ItemData> dataList = itemType.getTypes();
+						for (int i = 0; i < dataList.size(); i++)
+							serializeItemData(itemWriter, "itemData::"+i+"::", dataList.get(i));
+						itemWriter.toReader().readAll().forEach((k, v) -> writer.write("item::"+k, v));
+					}
+
+					List<ItemData> dataList = itemType.getTypes();
+					for (int i = 0; i < dataList.size(); i++)
+						serializeItemData(writer, "itemData::"+i+"::", dataList.get(i));
+				}
+
+				@Override
+				public @Nullable ItemType deserialize(YggdrasilReader reader) {
+					ItemType itemType = new ItemType();
+					itemType.setAll(reader.readBoolean("all"));
+					itemType.setAmount(reader.readInt("amount"));
+					ArrayList<ItemData> dataList = new ArrayList<>();
+
+					YggdrasilWriter blockWriter = new YggdrasilWriter(null);
+					YggdrasilWriter itemWriter = new YggdrasilWriter(null);
+					reader.readAll().forEach((k, v) -> {
+						if (k.startsWith("block::")) {
+							blockWriter.write(k.substring(7), v);
+						} else if (k.startsWith("item::")) {
+							itemWriter.write(k.substring(7), v);
+						} else if (k.startsWith("itemData::")) {
+							String[] split = k.split("::");
+							if (split.length == 2) {
+								dataList.add(deserializeItemData(reader, split[0] + "::" + split[1]));
+							}
+						}
+					});
+					itemType.setTypes(dataList);
+
+					if (blockWriter.size() > 0)
+						itemType.setBlock(deserialize(blockWriter.toReader()));
+					if (itemWriter.size() > 0)
+						itemType.setItem(deserialize(itemWriter.toReader()));
+
+					return itemType;
+				}
+			})
+		);
 
 		Classes.registerClass(new ClassInfo<>(Time.class, "time")
 				.user("times?")
@@ -269,22 +331,17 @@ public class SkriptClasses {
 						return "time:" + o.getTicks();
 					}
 				}).serializer(new YggdrasilSerializer<Time>() {
-//						return "" + t.getTicks();
-					@Override
-					@Nullable
-					public Time deserialize(final String s) {
-						try {
-							return new Time(Integer.parseInt(s));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
+				@Override
+				public void serialize(YggdrasilWriter writer, Time time) {
+					if (time != null)
+						writer.write("time", time.getTime());
+				}
 
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
-				}));
+				@Override
+				public @Nullable Time deserialize(YggdrasilReader reader) {
+					return new Time(reader.readInt("time"));
+				}
+			}));
 
 		Classes.registerClass(new ClassInfo<>(Timespan.class, "timespan")
 				.user("time ?spans?")
@@ -322,24 +379,19 @@ public class SkriptClasses {
 					public String toVariableNameString(final Timespan o) {
 						return "timespan:" + o.getMilliSeconds();
 					}
-				}).serializer(new YggdrasilSerializer<Timespan>() {
-//						return "" + t.getMilliSeconds();
-					@Override
-					@Nullable
-					public Timespan deserialize(final String s) {
-						try {
-							return new Timespan(Long.parseLong(s));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
-
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
 				})
-				.math(Timespan.class, new Arithmetic<Timespan, Timespan>() {
+			.serializer(new YggdrasilSerializer<Timespan>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, Timespan timespan) {
+					writer.writeLong("ms", timespan.getMilliSeconds());
+				}
+
+				@Override
+				public @Nullable Timespan deserialize(YggdrasilReader reader) {
+					return new Timespan(reader.readLong("ms"));
+				}
+			})
+			.math(Timespan.class, new Arithmetic<Timespan, Timespan>() {
 					@Override
 					public Timespan difference(final Timespan t1, final Timespan t2) {
 						return new Timespan(Math.abs(t1.getMilliSeconds() - t2.getMilliSeconds()));
@@ -420,20 +472,17 @@ public class SkriptClasses {
 						return "timeperiod:" + o.start + "-" + o.end;
 					}
 				}).serializer(new YggdrasilSerializer<Timeperiod>() {
-//						return t.start + "-" + t.end;
-					@Override
-					@Nullable
-					public Timeperiod deserialize(final String s) {
-						final String[] split = s.split("-");
-						if (split.length != 2)
-							return null;
-						try {
-							return new Timeperiod(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
-				}));
+				@Override
+				public void serialize(YggdrasilWriter writer, Timeperiod timeperiod) {
+					writer.writeInt("start", timeperiod.start)
+						.writeInt("end", timeperiod.end);
+				}
+
+				@Override
+				public @Nullable Timeperiod deserialize(YggdrasilReader reader) {
+					return new Timeperiod(reader.readInt("start"), reader.readInt("end"));
+				}
+			}));
 
 		Classes.registerClass(new ClassInfo<>(Date.class, "date")
 				.user("dates?")
@@ -446,17 +495,18 @@ public class SkriptClasses {
 						"# now {_yesterday} represents the date 24 hours before now")
 				.since("1.4")
 				.serializer(new YggdrasilSerializer<Date>() {
-//						return "" + d.getTimestamp();
+
 					@Override
-					@Nullable
-					public Date deserialize(final String s) {
-						try {
-							return new Date(Long.parseLong(s));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
+					public void serialize(YggdrasilWriter writer, Date date) {
+						writer.writeLong("timestamp", date.getTimestamp());
 					}
-				}).math(Timespan.class, new Arithmetic<Date, Timespan>() {
+
+					@Override
+					public @Nullable Date deserialize(YggdrasilReader reader) {
+						return new Date(reader.readLong("timestamp"));
+					}
+				})
+				.math(Timespan.class, new Arithmetic<Date, Timespan>() {
 					@Override
 					public Timespan difference(final Date first, final Date second) {
 						return first.difference(second);
@@ -523,12 +573,22 @@ public class SkriptClasses {
 					}
 				})
 				.serializer(new YggdrasilSerializer<Direction>() {
-//						return o.serialize();
 					@Override
-					@Deprecated
-					@Nullable
-					public Direction deserialize(final String s) {
-						return Direction.deserialize(s);
+					public void serialize(YggdrasilWriter writer, Direction direction) {
+						writer.writeDouble("pitch", direction.getPitchOrX())
+							.writeDouble("length", direction.getLengthOrZ())
+							.writeDouble("yaw", direction.getYawOrY())
+							.writeBoolean("relative", direction.isRelative());
+					}
+
+					@Override
+					public @Nullable Direction deserialize(YggdrasilReader reader) {
+						return new Direction(
+							reader.readDouble("pitch"),
+							reader.readDouble("length"),
+							reader.readDouble("yaw"),
+							reader.readBoolean("relative")
+						);
 					}
 				}));
 
@@ -677,7 +737,8 @@ public class SkriptClasses {
 					public String toVariableNameString(Color color) {
 						return "" + color.getName().toLowerCase(Locale.ENGLISH).replace('_', ' ');
 					}
-				}));
+				})
+		);
 
 		Classes.registerClass(new ClassInfo<>(StructureType.class, "structuretype")
 				.user("tree ?types?", "trees?")
@@ -732,21 +793,21 @@ public class SkriptClasses {
 					}
 				})
 				.serializer(new YggdrasilSerializer<EnchantmentType>() {
-//						return o.getType().getId() + ":" + o.getLevel();
 					@Override
-					@Nullable
-					public EnchantmentType deserialize(final String s) {
-						final String[] split = s.split(":");
-						if (split.length != 2)
+					public void serialize(YggdrasilWriter writer, EnchantmentType enchantmentType) {
+						Enchantment e = enchantmentType.getType();
+						if (e == null)
+							return;
+						writer.writeString("key", EnchantmentUtils.getKey(e))
+							.writeInt("level", enchantmentType.getInternalLevel());
+					}
+
+					@Override
+					public @Nullable EnchantmentType deserialize(YggdrasilReader reader) {
+						Enchantment e = EnchantmentUtils.getByKey(reader.readString("key"));
+						if (e == null)
 							return null;
-						try {
-							final Enchantment ench = EnchantmentUtils.getByKey(split[0]);
-							if (ench == null)
-								return null;
-							return new EnchantmentType(ench, Integer.parseInt(split[1]));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
+						return new EnchantmentType(e, reader.readInt("level"));
 					}
 				}));
 
@@ -760,7 +821,7 @@ public class SkriptClasses {
 				.since("2.0")
 				.parser(new Parser<Experience>() {
 					private final RegexMessage pattern = new RegexMessage("types.experience.pattern", Pattern.CASE_INSENSITIVE);
-					
+
 					@Override
 					@Nullable
 					public Experience parse(String s, final ParseContext context) {
@@ -773,12 +834,12 @@ public class SkriptClasses {
 							return new Experience(xp);
 						return null;
 					}
-					
+
 					@Override
 					public String toString(final Experience xp, final int flags) {
 						return xp.toString();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Experience xp) {
 						return "" + xp.getXP();
@@ -786,15 +847,14 @@ public class SkriptClasses {
 
 				})
 				.serializer(new YggdrasilSerializer<Experience>() {
-//						return "" + xp;
 					@Override
-					@Nullable
-					public Experience deserialize(final String s) {
-						try {
-							return new Experience(Integer.parseInt(s));
-						} catch (final NumberFormatException e) {
-							return null;
-						}
+					public void serialize(YggdrasilWriter writer, Experience experience) {
+						writer.writeInt("xp", experience.getInternalXP());
+					}
+
+					@Override
+					public @Nullable Experience deserialize(YggdrasilReader reader) {
+						return new Experience(reader.readInt("xp"));
 					}
 				}));
 
@@ -824,8 +884,18 @@ public class SkriptClasses {
 					}
 
 				})
-				.serializer(new YggdrasilSerializer<>()));
-		
+				.serializer(new YggdrasilSerializer<VisualEffect>() {
+					@Override
+					public void serialize(YggdrasilWriter writer, VisualEffect visualEffect) {
+						writer.writeString("name", visualEffect.toString());
+					}
+
+					@Override
+					public @Nullable VisualEffect deserialize(YggdrasilReader reader) {
+						return VisualEffects.parse(reader.readString("name"));
+					}
+				}));
+
 		Classes.registerClass(new ClassInfo<>(GameruleValue.class, "gamerulevalue")
 				.user("gamerule values?")
 				.name("Gamerule Value")
@@ -833,8 +903,7 @@ public class SkriptClasses {
 				.usage("")
 				.examples("")
 				.since("2.5")
-				.serializer(new YggdrasilSerializer<GameruleValue>())
 		);
 	}
-	
+
 }

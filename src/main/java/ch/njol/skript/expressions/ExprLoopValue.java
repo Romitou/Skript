@@ -28,7 +28,6 @@ import ch.njol.skript.doc.Since;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.ConvertedExpression;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.log.ErrorQuality;
@@ -37,6 +36,7 @@ import ch.njol.skript.registrations.Converters;
 import ch.njol.skript.sections.SecLoop;
 import ch.njol.skript.util.Utils;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.lang.ExprVariable;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  * Used to access a loop's current value.
  * <p>
  * TODO expression to get the current # of execution (e.g. loop-index/number/count/etc (not number though));
- * 
+ *
  * @author Peter Güttinger
  */
 @Name("Loop value")
@@ -67,18 +67,18 @@ public class ExprLoopValue extends SimpleExpression<Object> {
 	static {
 		Skript.registerExpression(ExprLoopValue.class, Object.class, ExpressionType.SIMPLE, "[the] loop-<.+>");
 	}
-	
+
 	@SuppressWarnings("null")
 	private String name;
-	
+
 	@SuppressWarnings("null")
 	private SecLoop loop;
-	
+
 	// whether this loops a variable
 	boolean isVariableLoop = false;
 	// if this loops a variable and isIndex is true, return the index of the variable instead of the value
 	boolean isIndex = false;
-	
+
 	@Override
 	public boolean init(Expression<?>[] vars, int matchedPattern, Kleenean isDelayed, ParseResult parser) {
 		name = parser.expr;
@@ -112,20 +112,20 @@ public class ExprLoopValue extends SimpleExpression<Object> {
 			Skript.error("There's no loop that matches 'loop-" + s + "'", ErrorQuality.SEMANTIC_ERROR);
 			return false;
 		}
-		if (loop.getLoopedExpression() instanceof Variable) {
+		if (loop.getLoopedExpression() instanceof ExprVariable<?>) {
 			isVariableLoop = true;
-			if (((Variable<?>) loop.getLoopedExpression()).isIndexLoop(s))
+			if (((ExprVariable<?>) loop.getLoopedExpression()).isIndexLoop(s))
 				isIndex = true;
 		}
 		this.loop = loop;
 		return true;
 	}
-	
+
 	@Override
 	public boolean isSingle() {
 		return true;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nullable
@@ -144,14 +144,14 @@ public class ExprLoopValue extends SimpleExpression<Object> {
 			return super.getConvertedExpr(to);
 		}
 	}
-	
+
 	@Override
 	public Class<? extends Object> getReturnType() {
 		if (isIndex)
 			return String.class;
 		return loop.getLoopedExpression().getReturnType();
 	}
-	
+
 	@Override
 	@Nullable
 	protected Object[] get(Event e) {
@@ -169,7 +169,7 @@ public class ExprLoopValue extends SimpleExpression<Object> {
 		one[0] = loop.getCurrent(e);
 		return one;
 	}
-	
+
 	@Override
 	public String toString(@Nullable Event e, boolean debug) {
 		if (e == null)
@@ -182,5 +182,5 @@ public class ExprLoopValue extends SimpleExpression<Object> {
 		}
 		return Classes.getDebugMessage(loop.getCurrent(e));
 	}
-	
+
 }

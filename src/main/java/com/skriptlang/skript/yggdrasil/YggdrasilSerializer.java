@@ -16,10 +16,25 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-package ch.njol.skript.classes;
+package com.skriptlang.skript.yggdrasil;
 
-/**
- * @author Peter Güttinger
- */
-@Deprecated
-public interface SerializableChanger<T> extends Changer<T> {}
+import ch.njol.skript.classes.ClassInfo;
+import org.eclipse.jdt.annotation.Nullable;
+
+public abstract class YggdrasilSerializer<T> {
+
+	private ClassInfo<? extends T> classInfo = null;
+
+	public void setClassInfo(ClassInfo<? extends T> classInfo) {
+		this.classInfo = classInfo;
+	}
+
+	public ClassInfo<? extends T> getClassInfo() {
+		return this.classInfo;
+	}
+
+	public abstract void serialize(YggdrasilWriter writer, T object);
+
+	public abstract @Nullable T deserialize(YggdrasilReader reader);
+
+}

@@ -18,8 +18,6 @@
  */
 package ch.njol.skript.hooks.regions;
 
-import static ch.njol.skript.variables.Variables.yggdrasil;
-
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.StreamCorruptedException;
@@ -43,8 +41,6 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import ch.njol.skript.hooks.regions.classes.Region;
 import ch.njol.skript.util.AABB;
-import ch.njol.yggdrasil.Fields;
-import ch.njol.yggdrasil.YggdrasilID;
 import net.sacredlabyrinth.Phaed.PreciousStones.PreciousStones;
 import net.sacredlabyrinth.Phaed.PreciousStones.field.Field;
 import net.sacredlabyrinth.Phaed.PreciousStones.field.FieldFlag;
@@ -93,7 +89,6 @@ public class PreciousStonesHook extends RegionsPlugin<PreciousStones> {
         return PreciousStonesRegion.class;
     }
 
-    @YggdrasilID("PreciousStonesRegion")
     public final class PreciousStonesRegion extends Region {
 
         private transient Field field;
@@ -170,14 +165,14 @@ public class PreciousStonesHook extends RegionsPlugin<PreciousStones> {
             return Objects.hash(field);
         }
 
-        @Override
-        public Fields serialize() throws NotSerializableException {
-            return new Fields(this);
-        }
-
-        @Override
-        public void deserialize(final Fields fields) throws StreamCorruptedException, NotSerializableException {
-            new Fields(fields).setFields(this);
-        }
+//        @Override
+//        public Fields serialize() throws NotSerializableException {
+//            return new Fields(this);
+//        }
+//
+//        @Override
+//        public void deserialize(final Fields fields) throws StreamCorruptedException, NotSerializableException {
+//            new Fields(fields).setFields(this);
+//        }
     }
 }

@@ -107,7 +107,7 @@ public class VisualEffectType {
 	}
 
 	@Nullable
-	static VisualEffectType of(Enum<?> effect) {
+	public static VisualEffectType of(Enum<?> effect) {
 		Objects.requireNonNull(effect);
 
 		VisualEffectType type = new VisualEffectType(effect);

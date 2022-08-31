@@ -35,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ch.njol.skript.util.SkriptColor;
+import com.skriptlang.skript.variables.Variables;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -75,7 +76,6 @@ import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.StringMode;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Utils;
-import ch.njol.skript.variables.Variables;
 import ch.njol.util.NonNullPair;
 import ch.njol.util.StringUtils;
 
@@ -86,32 +86,32 @@ import ch.njol.util.StringUtils;
  */
 @SuppressWarnings("deprecation")
 public abstract class Commands {
-	
+
 	public final static ArgsMessage m_too_many_arguments = new ArgsMessage("commands.too many arguments");
 	public final static Message m_internal_error = new Message("commands.internal error");
 	public final static Message m_correct_usage = new Message("commands.correct usage");
-	
+
 	private final static Map<String, ScriptCommand> commands = new HashMap<>();
-	
+
 	@Nullable
 	private static SimpleCommandMap commandMap = null;
 	@Nullable
 	private static Map<String, Command> cmKnownCommands;
 	@Nullable
 	private static Set<String> cmAliases;
-	
+
 	static {
 		init(); // separate method for the annotation
 	}
 	public static Set<String> getScriptCommands(){
 		return commands.keySet();
 	}
-	
+
 	@Nullable
 	public static SimpleCommandMap getCommandMap(){
 		return commandMap;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private static void init() {
 		try {
@@ -119,11 +119,11 @@ public abstract class Commands {
 				final Field commandMapField = SimplePluginManager.class.getDeclaredField("commandMap");
 				commandMapField.setAccessible(true);
 				commandMap = (SimpleCommandMap) commandMapField.get(Bukkit.getPluginManager());
-				
+
 				final Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
 				knownCommandsField.setAccessible(true);
 				cmKnownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
-				
+
 				try {
 					final Field aliasesField = SimpleCommandMap.class.getDeclaredField("aliases");
 					aliasesField.setAccessible(true);
@@ -138,7 +138,7 @@ public abstract class Commands {
 			commandMap = null;
 		}
 	}
-	
+
 	private final static SectionValidator commandStructure = new SectionValidator()
 			.addEntry("usage", true)
 			.addEntry("description", true)
@@ -151,23 +151,23 @@ public abstract class Commands {
 			.addEntry("aliases", true)
 			.addEntry("executable by", true)
 			.addSection("trigger", false);
-	
+
 	@Nullable
 	public static List<Argument<?>> currentArguments = null;
-	
+
 	@SuppressWarnings("null")
 	private final static Pattern escape = Pattern.compile("[" + Pattern.quote("(|)<>%\\") + "]");
 	@SuppressWarnings("null")
 	private final static Pattern unescape = Pattern.compile("\\\\[" + Pattern.quote("(|)<>%\\") + "]");
-	
+
 	private static String escape(final String s) {
 		return "" + escape.matcher(s).replaceAll("\\\\$0");
 	}
-	
+
 	private static String unescape(final String s) {
 		return "" + unescape.matcher(s).replaceAll("$0");
 	}
-	
+
 	private final static Listener commandListener = new Listener() {
 		@SuppressWarnings("null")
 		@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -175,7 +175,7 @@ public abstract class Commands {
 			if (handleCommand(e.getPlayer(), e.getMessage().substring(1)))
 				e.setCancelled(true);
 		}
-		
+
 		@SuppressWarnings("null")
 		@EventHandler(priority = EventPriority.HIGHEST)
 		public void onServerCommand(final ServerCommandEvent e) {
@@ -218,7 +218,7 @@ public abstract class Commands {
 		}
 		return false;
 	}
-	
+
 	static boolean handleEffectCommand(final CommandSender sender, String command) {
 		if (!(sender instanceof ConsoleCommandSender || sender.hasPermission("skript.effectcommands") || SkriptConfig.allowOpsToUseEffectCommands.value() && sender.isOp()))
 			return false;
@@ -234,7 +234,7 @@ public abstract class Commands {
 				parserInstance.setCurrentEvent("effect command", EffectCommandEvent.class);
 				Effect effect = Effect.parse(command, null);
 				parserInstance.deleteCurrentEvent();
-				
+
 				if (effect != null) {
 					log.clear(); // ignore warnings and stuff
 					log.printLog();
@@ -264,23 +264,23 @@ public abstract class Commands {
 			return true;
 		}
 	}
-	
+
 	@SuppressWarnings("null")
 	private final static Pattern commandPattern = Pattern.compile("(?i)^command /?(\\S+)\\s*(\\s+(.+))?$"),
 			argumentPattern = Pattern.compile("<\\s*(?:([^>]+?)\\s*:\\s*)?(.+?)\\s*(?:=\\s*(" + SkriptParser.wildcard + "))?\\s*>");
-	
+
 	@Nullable
 	public static ScriptCommand loadCommand(final SectionNode node) {
 		return loadCommand(node, true);
 	}
-	
+
 	@Nullable
 	public static ScriptCommand loadCommand(final SectionNode node, final boolean alsoRegister) {
 		final String key = node.getKey();
 		if (key == null)
 			return null;
 		final String s = ScriptLoader.replaceOptions(key);
-		
+
 		int level = 0;
 		for (int i = 0; i < s.length(); i++) {
 			if (s.charAt(i) == '[') {
@@ -297,7 +297,7 @@ public abstract class Commands {
 			Skript.error("Invalid amount of [optional brackets]");
 			return null;
 		}
-		
+
 		Matcher m = commandPattern.matcher(s);
 		final boolean a = m.matches();
 		assert a;
@@ -309,10 +309,10 @@ public abstract class Commands {
 			Skript.error("A command with the name /" + existingCommand.getName() + " is already defined" + (f == null ? "" : " in " + f.getName()));
 			return null;
 		}
-		
+
 		final String arguments = m.group(3) == null ? "" : m.group(3);
 		final StringBuilder pattern = new StringBuilder();
-		
+
 		List<Argument<?>> currentArguments = Commands.currentArguments = new ArrayList<>(); //Mirre
 		m = argumentPattern.matcher(arguments);
 		int lastEnd = 0;
@@ -321,9 +321,9 @@ public abstract class Commands {
 			pattern.append(escape("" + arguments.substring(lastEnd, m.start())));
 			optionals += StringUtils.count(arguments, '[', lastEnd, m.start());
 			optionals -= StringUtils.count(arguments, ']', lastEnd, m.start());
-			
+
 			lastEnd = m.end();
-			
+
 			ClassInfo<?> c;
 			c = Classes.getClassInfoFromUserInput("" + m.group(2));
 			final NonNullPair<String, Boolean> p = Utils.getEnglishPlural("" + m.group(2));
@@ -338,25 +338,25 @@ public abstract class Commands {
 				Skript.error("Can't use " + c + " as argument of a command");
 				return null;
 			}
-			
+
 			final Argument<?> arg = Argument.newInstance(m.group(1), c, m.group(3), i, !p.getSecond(), optionals > 0);
 			if (arg == null)
 				return null;
 			currentArguments.add(arg);
-			
+
 			if (arg.isOptional() && optionals == 0) {
 				pattern.append('[');
 				optionals++;
 			}
 			pattern.append("%" + (arg.isOptional() ? "-" : "") + Utils.toEnglishPlural(c.getCodeName(), p.getSecond()) + "%");
 		}
-		
+
 		pattern.append(escape("" + arguments.substring(lastEnd)));
 		optionals += StringUtils.count(arguments, '[', lastEnd);
 		optionals -= StringUtils.count(arguments, ']', lastEnd);
 		for (int i = 0; i < optionals; i++)
 			pattern.append(']');
-		
+
 		String desc = "/" + command + " ";
 
 		desc += StringUtils.replaceAll(pattern, "(?<!\\\\)%-?(.+?)%", m1 -> {
@@ -368,12 +368,12 @@ public abstract class Commands {
 
 		desc = unescape(desc);
 		desc = "" + desc.trim();
-		
+
 		node.convertToEntries(0);
 		commandStructure.validate(node);
 		if (!(node.get("trigger") instanceof SectionNode))
 			return null;
-		
+
 		final String usage = ScriptLoader.replaceOptions(node.get("usage", m_correct_usage + " " + desc));
 		final String description = ScriptLoader.replaceOptions(node.get("description", ""));
 		ArrayList<String> aliases = new ArrayList<>(Arrays.asList(ScriptLoader.replaceOptions(node.get("aliases", "")).split("\\s*,\\s*/?")));
@@ -440,13 +440,13 @@ public abstract class Commands {
 
 		if (Skript.debug() || node.debug())
 			Skript.debug("command " + desc + ":");
-		
+
 		final File config = node.getConfig().getFile();
 		if (config == null) {
 			assert false;
 			return null;
 		}
-		
+
 		Commands.currentArguments = currentArguments;
 		ScriptCommand c;
 		try {
@@ -457,20 +457,20 @@ public abstract class Commands {
 		} finally {
 			Commands.currentArguments = null;
 		}
-		
+
 		if (alsoRegister)
 			registerCommand(c);
-		
+
 		if (Skript.logVeryHigh() && !Skript.debug())
 			Skript.info("registered command " + desc);
 		return c;
 	}
-	
+
 	public static boolean skriptCommandExists(final String command) {
 		final ScriptCommand c = commands.get(command);
 		return c != null && c.getName().equals(command);
 	}
-	
+
 	public static void registerCommand(final ScriptCommand command) {
 		// Validate that there are no duplicates
 		final ScriptCommand existingCommand = commands.get(command.getLabel());
@@ -479,7 +479,7 @@ public abstract class Commands {
 			Skript.error("A command with the name /" + existingCommand.getName() + " is already defined" + (f == null ? "" : " in " + f.getName()));
 			return;
 		}
-		
+
 		if (commandMap != null) {
 			assert cmKnownCommands != null;// && cmAliases != null;
 			command.register(commandMap, cmKnownCommands, cmAliases);
@@ -490,7 +490,7 @@ public abstract class Commands {
 		}
 		command.registerHelp();
 	}
-	
+
 	public static int unregisterCommands(final File script) {
 		int numCommands = 0;
 		final Iterator<ScriptCommand> commandsIter = commands.values().iterator();
@@ -508,9 +508,9 @@ public abstract class Commands {
 		}
 		return numCommands;
 	}
-	
+
 	private static boolean registeredListeners = false;
-	
+
 	public static void registerListeners() {
 		if (!registeredListeners) {
 			Bukkit.getPluginManager().registerEvents(commandListener, Skript.getInstance());
@@ -549,7 +549,7 @@ public abstract class Commands {
 			registeredListeners = true;
 		}
 	}
-	
+
 	public static void clearCommands() {
 		final SimpleCommandMap commandMap = Commands.commandMap;
 		if (commandMap != null) {
@@ -564,15 +564,15 @@ public abstract class Commands {
 		}
 		commands.clear();
 	}
-	
+
 	/**
 	 * copied from CraftBukkit (org.bukkit.craftbukkit.help.CommandAliasHelpTopic)
 	 */
 	public final static class CommandAliasHelpTopic extends HelpTopic {
-		
+
 		private final String aliasFor;
 		private final HelpMap helpMap;
-		
+
 		public CommandAliasHelpTopic(final String alias, final String aliasFor, final HelpMap helpMap) {
 			this.aliasFor = aliasFor.startsWith("/") ? aliasFor : "/" + aliasFor;
 			this.helpMap = helpMap;
@@ -580,7 +580,7 @@ public abstract class Commands {
 			Validate.isTrue(!name.equals(this.aliasFor), "Command " + name + " cannot be alias for itself");
 			shortText = ChatColor.YELLOW + "Alias for " + ChatColor.WHITE + this.aliasFor;
 		}
-		
+
 		@Override
 		public String getFullText(final CommandSender forWho) {
 			final StringBuilder sb = new StringBuilder(shortText);
@@ -591,7 +591,7 @@ public abstract class Commands {
 			}
 			return "" + sb.toString();
 		}
-		
+
 		@Override
 		public boolean canSee(final CommandSender commandSender) {
 			if (amendedPermission == null) {
@@ -607,5 +607,5 @@ public abstract class Commands {
 			}
 		}
 	}
-	
+
 }

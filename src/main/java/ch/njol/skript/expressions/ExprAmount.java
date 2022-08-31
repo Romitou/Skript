@@ -28,16 +28,16 @@ import ch.njol.skript.lang.ExpressionList;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.lang.Variable;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.lang.ExprVariable;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
 import java.util.Map;
 
 /**
- * 
+ *
  * @author Peter Güttinger
  */
 @Name("Amount")
@@ -85,7 +85,7 @@ public class ExprAmount extends SimpleExpression<Long> {
 				Skript.error("'" + expr.toString(null, false) + "' can only ever have one value at most, thus the 'amount of ...' expression is useless. Use '... exists' instead to find out whether the expression has a value.");
 				return false;
 			}
-			if (recursive && !(expr instanceof Variable<?>)) {
+			if (recursive && !(expr instanceof ExprVariable<?>)) {
 				Skript.error("Getting the recursive size of a list only applies to variables, thus the '" + expr.toString(null, false) + "' expression is useless.");
 				return false;
 			}
@@ -96,17 +96,19 @@ public class ExprAmount extends SimpleExpression<Long> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Long[] get(Event e) {
-		if (recursive) {
-			int currentSize = 0;
-			for (Expression<?> expr : exprs.getExpressions()) {
-				Object var = ((Variable<?>) expr).getRaw(e);
-				if (var != null) { // Should already be a map
-					currentSize += getRecursiveSize((Map<String, ?>) var);
-				}
-			}
-			return new Long[]{(long) currentSize};
-		}
-		return new Long[]{(long) exprs.getArray(e).length};
+		// TODO
+//		if (recursive) {
+//			int currentSize = 0;
+//			for (Expression<?> expr : exprs.getExpressions()) {
+//				Object var = ((ExprVariable<?>) expr).getRaw(e);
+//				if (var != null) { // Should already be a map
+//					currentSize += getRecursiveSize((Map<String, ?>) var);
+//				}
+//			}
+//			return new Long[]{(long) currentSize};
+//		}
+//		return new Long[]{(long) exprs.getArray(e).length};
+		return new Long[0];
 	}
 
 	@SuppressWarnings("unchecked")

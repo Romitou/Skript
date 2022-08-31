@@ -18,6 +18,8 @@
  */
 package ch.njol.skript.util;
 
+import com.skriptlang.skript.variables.VariableMap;
+import com.skriptlang.skript.variables.Variables;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
@@ -28,7 +30,6 @@ import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.timings.SkriptTimings;
-import ch.njol.skript.variables.Variables;
 
 /**
  * Effects that extend this class are ran asynchronously. Next trigger item will be ran
@@ -40,14 +41,17 @@ import ch.njol.skript.variables.Variables;
  * {@link ch.njol.util.Kleenean#TRUE} in the {@code init} method.
  */
 public abstract class AsyncEffect extends Effect {
-	
+
 	@Override
 	@Nullable
 	protected TriggerItem walk(Event e) {
 		debug(e, true);
-		
+
 		Delay.addDelayedEvent(e); // Mark this event as delayed
-		Object localVars = Variables.removeLocals(e); // Back up local variables
+
+		// Back up local variables
+		VariableMap localVars = Variables.getLocalVariables(e);
+		Variables.removeLocals(e);
 
 		if (!Skript.getInstance().isEnabled()) // See https://github.com/SkriptLang/Skript/issues/3702
 			return null;
@@ -56,9 +60,9 @@ public abstract class AsyncEffect extends Effect {
 			// Re-set local variables
 			if (localVars != null)
 				Variables.setLocalVariables(e, localVars);
-			
+
 			execute(e); // Execute this effect
-			
+
 			if (getNext() != null) {
 				Bukkit.getScheduler().runTask(Skript.getInstance(), () -> { // Walk to next item synchronously
 					Object timing = null;
@@ -68,11 +72,11 @@ public abstract class AsyncEffect extends Effect {
 							timing = SkriptTimings.start(trigger.getDebugLabel());
 						}
 					}
-					
+
 					TriggerItem.walk(getNext(), e);
-					
+
 					Variables.removeLocals(e); // Clean up local vars, we may be exiting now
-					
+
 					SkriptTimings.stop(timing); // Stop timing if it was even started
 				});
 			} else {

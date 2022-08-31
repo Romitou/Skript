@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import com.skriptlang.skript.variables.Variables;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -73,7 +74,6 @@ import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.Utils;
 import ch.njol.skript.util.chat.BungeeConverter;
 import ch.njol.skript.util.chat.MessageComponent;
-import ch.njol.skript.variables.Variables;
 import ch.njol.util.StringUtils;
 import ch.njol.util.Validate;
 
@@ -114,7 +114,7 @@ public class ScriptCommand implements TabExecutor {
 
 	/**
 	 * Creates a new SkriptCommand.
-	 * 
+	 *
 	 * @param name /name
 	 * @param pattern
 	 * @param arguments the list of Arguments this command takes
@@ -278,14 +278,14 @@ public class ScriptCommand implements TabExecutor {
 		} finally {
 			log.stop();
 		}
-		
+
 		if (Skript.log(Verbosity.VERY_HIGH))
 			Skript.info("# /" + name + " " + rest);
 		final long startTrigger = System.nanoTime();
-		
+
 		if (!trigger.execute(event))
 			sender.sendMessage(Commands.m_internal_error.toString());
-		
+
 		if (Skript.log(Verbosity.VERY_HIGH))
 			Skript.info("# " + name + " took " + 1. * (System.nanoTime() - startTrigger) / 1000000. + " milliseconds");
 		return true;
@@ -299,7 +299,7 @@ public class ScriptCommand implements TabExecutor {
 
 	/**
 	 * Gets the arguments this command takes.
-	 * 
+	 *
 	 * @return The internal list of arguments. Do not modify it!
 	 */
 	public List<Argument<?>> getArguments() {
@@ -444,7 +444,7 @@ public class ScriptCommand implements TabExecutor {
 		} else {
 			String name = getStorageVariableName(event);
 			assert name != null;
-			return (Date) Variables.getVariable(name, null, false);
+			return (Date) Variables.getVariable(name);
 		}
 	}
 
@@ -453,7 +453,7 @@ public class ScriptCommand implements TabExecutor {
 			// Using a variable
 			String name = getStorageVariableName(event);
 			assert name != null;
-			Variables.setVariable(name, date, null, false);
+			Variables.setVariable(name, date);
 		} else {
 			// Use the map
 			if (date == null)
@@ -527,7 +527,7 @@ public class ScriptCommand implements TabExecutor {
 		Class<?> argType = arg.getType();
 		if (argType.equals(Player.class) || argType.equals(OfflinePlayer.class))
 			return null; // Default completion
-		
+
 		return Collections.emptyList(); // No tab completion here!
 	}
 

@@ -16,70 +16,70 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-package ch.njol.skript.util;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
-import org.bukkit.persistence.PersistentDataAdapterContext;
-import org.bukkit.persistence.PersistentDataType;
-
-import ch.njol.skript.variables.SerializedVariable.Value;
-
-/**
- * This {@link PersistentDataType} is used for single variables.
- * The {@link org.bukkit.NamespacedKey}'s key should be the variable's name.
- * {hello} -> "hello" and the {@link Value} is the variable's serialized value.
- * @see PersistentDataUtils#getNamespacedKey(String)
- * @see PersistentDataUtils
- * @author APickledWalrus
- */
-public final class SingleVariablePersistentDataType implements PersistentDataType<byte[], Value> {
-
-	// This is how many bytes an int is.
-	private final int INT_LENGTH = 4;
-
-	// Charset used for converting bytes and Strings
-	@SuppressWarnings("null")
-	private final Charset SERIALIZED_CHARSET = StandardCharsets.UTF_8;
-
-	@Override
-	public Class<byte[]> getPrimitiveType() {
-		return byte[].class;
-	}
-
-	@Override
-	public Class<Value> getComplexType() {
-		return Value.class;
-	}
-
-	@SuppressWarnings("null")
-	@Override
-	public byte[] toPrimitive(Value complex, PersistentDataAdapterContext context) {
-		byte[] type = complex.type.getBytes(SERIALIZED_CHARSET);
-
-		ByteBuffer bb = ByteBuffer.allocate(INT_LENGTH + type.length + complex.data.length);
-		bb.putInt(type.length);
-		bb.put(type);
-		bb.put(complex.data);
-
-		return bb.array();
-	}
-
-	@Override
-	public Value fromPrimitive(byte[] primitive, PersistentDataAdapterContext context) {
-		ByteBuffer bb = ByteBuffer.wrap(primitive);
-
-		int typeLength = bb.getInt();
-		byte[] typeBytes = new byte[typeLength];
-		bb.get(typeBytes, 0, typeLength);
-		String type = new String(typeBytes, SERIALIZED_CHARSET);
-
-		byte[] data = new byte[bb.remaining()];
-		bb.get(data);
-
-		return new Value(type, data);
-	}
-
-}
+//package ch.njol.skript.util;
+//
+//import java.nio.ByteBuffer;
+//import java.nio.charset.Charset;
+//import java.nio.charset.StandardCharsets;
+//
+//import org.bukkit.persistence.PersistentDataAdapterContext;
+//import org.bukkit.persistence.PersistentDataType;
+//
+//import ch.njol.skript.variables.SerializedVariable.Value;
+//
+///**
+// * This {@link PersistentDataType} is used for single variables.
+// * The {@link org.bukkit.NamespacedKey}'s key should be the variable's name.
+// * {hello} -> "hello" and the {@link Value} is the variable's serialized value.
+// * @see PersistentDataUtils#getNamespacedKey(String)
+// * @see PersistentDataUtils
+// * @author APickledWalrus
+// */
+//public final class SingleVariablePersistentDataType implements PersistentDataType<byte[], Value> {
+//
+//	// This is how many bytes an int is.
+//	private final int INT_LENGTH = 4;
+//
+//	// Charset used for converting bytes and Strings
+//	@SuppressWarnings("null")
+//	private final Charset SERIALIZED_CHARSET = StandardCharsets.UTF_8;
+//
+//	@Override
+//	public Class<byte[]> getPrimitiveType() {
+//		return byte[].class;
+//	}
+//
+//	@Override
+//	public Class<Value> getComplexType() {
+//		return Value.class;
+//	}
+//
+//	@SuppressWarnings("null")
+//	@Override
+//	public byte[] toPrimitive(Value complex, PersistentDataAdapterContext context) {
+//		byte[] type = complex.type.getBytes(SERIALIZED_CHARSET);
+//
+//		ByteBuffer bb = ByteBuffer.allocate(INT_LENGTH + type.length + complex.data.length);
+//		bb.putInt(type.length);
+//		bb.put(type);
+//		bb.put(complex.data);
+//
+//		return bb.array();
+//	}
+//
+//	@Override
+//	public Value fromPrimitive(byte[] primitive, PersistentDataAdapterContext context) {
+//		ByteBuffer bb = ByteBuffer.wrap(primitive);
+//
+//		int typeLength = bb.getInt();
+//		byte[] typeBytes = new byte[typeLength];
+//		bb.get(typeBytes, 0, typeLength);
+//		String type = new String(typeBytes, SERIALIZED_CHARSET);
+//
+//		byte[] data = new byte[bb.remaining()];
+//		bb.get(data);
+//
+//		return new Value(type, data);
+//	}
+//
+//}

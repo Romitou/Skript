@@ -30,18 +30,17 @@ import org.eclipse.jdt.annotation.Nullable;
 import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.bukkitutil.EnchantmentUtils;
 import ch.njol.skript.localization.Language;
-import ch.njol.yggdrasil.YggdrasilSerializable;
 
 /**
  * @author Peter Güttinger
  */
-public class EnchantmentType implements YggdrasilSerializable {
-	
+public class EnchantmentType {
+
 	private final static String LANGUAGE_NODE = "enchantments";
-	
+
 	private final Enchantment type;
 	private final int level;
-	
+
 	/**
 	 * Used for deserialisation only
 	 */
@@ -50,7 +49,7 @@ public class EnchantmentType implements YggdrasilSerializable {
 		type = null;
 		level = -1;
 	}
-	
+
 	public EnchantmentType(final Enchantment type) {
 		assert type != null;
 		this.type = type;
@@ -61,26 +60,26 @@ public class EnchantmentType implements YggdrasilSerializable {
 		this.type = type;
 		this.level = level;
 	}
-	
+
 	/**
 	 * @return level or 1 if level == -1
 	 */
 	public int getLevel() {
 		return level == -1 ? 1 : level;
 	}
-	
+
 	/**
 	 * @return the internal level, can be -1
 	 */
 	public int getInternalLevel() {
 		return level;
 	}
-	
+
 	@Nullable
 	public Enchantment getType() {
 		return type;
 	}
-	
+
 	/**
 	 * Checks whether the given item type has this enchantment.
 	 * @param item the item to be checked.
@@ -90,26 +89,26 @@ public class EnchantmentType implements YggdrasilSerializable {
 	public boolean has(final ItemType item) {
 		return item.hasEnchantments(type);
 	}
-	
+
 	@Override
 	public String toString() {
 		return toString(type) + (level == -1 ? "" : " " + level);
 	}
-	
+
 	@SuppressWarnings("null")
 	public static String toString(final Enchantment e) {
 		return NAMES.get(e);
 	}
-	
+
 	// REMIND flags?
 	@SuppressWarnings("null")
 	public static String toString(final Enchantment e, final int flags) {
 		return NAMES.get(e);
 	}
-	
+
 	private final static Map<Enchantment, String> NAMES = new HashMap<>();
 	private final static Map<String, Enchantment> PATTERNS = new HashMap<>();
-	
+
 	static {
 		Language.addListener(() -> {
 			NAMES.clear();
@@ -117,16 +116,16 @@ public class EnchantmentType implements YggdrasilSerializable {
 				assert e != null;
 				final String[] names = Language.getList(LANGUAGE_NODE + ".names." + EnchantmentUtils.getKey(e));
 				NAMES.put(e, names[0]);
-				
+
 				for (String name : names)
 					PATTERNS.put(name.toLowerCase(Locale.ENGLISH), e);
 			}
 		});
 	}
-	
+
 	@SuppressWarnings("null")
 	private final static Pattern pattern = Pattern.compile(".+ \\d+");
-	
+
 	/**
 	 * Parses an enchantment type from string. This includes an {@link Enchantment}
 	 * and its level.
@@ -150,17 +149,17 @@ public class EnchantmentType implements YggdrasilSerializable {
 			return null;
 		return new EnchantmentType(ench, -1);
 	}
-	
+
 	@Nullable
 	public static Enchantment parseEnchantment(final String s) {
 		return PATTERNS.get(s.toLowerCase(Locale.ENGLISH));
 	}
-	
+
 	@SuppressWarnings("null")
 	public static Collection<String> getNames() {
 		return NAMES.values();
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -169,7 +168,7 @@ public class EnchantmentType implements YggdrasilSerializable {
 		result = prime * result + type.hashCode();
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(final @Nullable Object obj) {
 		if (this == obj)
@@ -183,5 +182,5 @@ public class EnchantmentType implements YggdrasilSerializable {
 			return false;
 		return type.equals(other.type);
 	}
-	
+
 }

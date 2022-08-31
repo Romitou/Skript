@@ -31,8 +31,9 @@ import ch.njol.skript.lang.Trigger;
 import ch.njol.skript.lang.TriggerItem;
 import ch.njol.skript.timings.SkriptTimings;
 import ch.njol.skript.util.Direction;
-import ch.njol.skript.variables.Variables;
 import ch.njol.util.Kleenean;
+import com.skriptlang.skript.variables.VariableMap;
+import com.skriptlang.skript.variables.Variables;
 import io.papermc.lib.PaperLib;
 import io.papermc.lib.environments.PaperEnvironment;
 import org.bukkit.Location;
@@ -76,7 +77,7 @@ public class EffTeleport extends Effect {
 			getParser().setHasDelayBefore(Kleenean.UNKNOWN); // UNKNOWN because it isn't async if the chunk is already loaded.
 		return true;
 	}
-	
+
 	@Nullable
 	@Override
 	protected TriggerItem walk(Event e) {
@@ -85,7 +86,7 @@ public class EffTeleport extends Effect {
 		TriggerItem next = getNext();
 
 		boolean delayed = Delay.isDelayed(e);
-		
+
 		Location loc = location.getSingle(e);
 		if (loc == null)
 			return next;
@@ -114,8 +115,11 @@ public class EffTeleport extends Effect {
 		}
 
 		Delay.addDelayedEvent(e);
-		Object localVars = Variables.removeLocals(e);
-		
+
+		// Back up local variables
+		VariableMap localVars = Variables.getLocalVariables(e);
+		Variables.removeLocals(e);
+
 		// This will either fetch the chunk instantly if on Spigot or already loaded or fetch it async if on Paper.
 		PaperLib.getChunkAtAsync(loc).thenAccept(chunk -> {
 			// The following is now on the main thread
@@ -126,7 +130,7 @@ public class EffTeleport extends Effect {
 			// Re-set local variables
 			if (localVars != null)
 				Variables.setLocalVariables(e, localVars);
-			
+
 			// Continue the rest of the trigger if there is one
 			Object timing = null;
 			if (next != null) {

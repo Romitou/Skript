@@ -108,20 +108,20 @@ public class WolfData extends EntityData<Wolf> {
 	/**
 	 * Note that this method is only used when changing Skript versions 2.1 to anything above.
 	 */
-	@Deprecated
-	@Override
-	protected boolean deserialize(String s) {
-		String[] split = s.split("\\|");
-		if (split.length != 2)
-			return false;
-		try {
-			angry = Integer.parseInt(split[0]);
-			tamed = Integer.parseInt(split[1]);
-			return true;
-		} catch (NumberFormatException e) {
-			return false;
-		}
-	}
+//	@Deprecated
+//	@Override
+//	protected boolean deserialize(String s) {
+//		String[] split = s.split("\\|");
+//		if (split.length != 2)
+//			return false;
+//		try {
+//			angry = Integer.parseInt(split[0]);
+//			tamed = Integer.parseInt(split[1]);
+//			return true;
+//		} catch (NumberFormatException e) {
+//			return false;
+//		}
+//	}
 
 	@Override
 	public boolean isSupertypeOf(EntityData<?> entityData) {

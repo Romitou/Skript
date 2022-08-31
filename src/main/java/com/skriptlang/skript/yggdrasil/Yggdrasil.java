@@ -16,12 +16,19 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-package ch.njol.skript.classes;
+package com.skriptlang.skript.yggdrasil;
 
-import ch.njol.util.Checker;
+import ch.njol.skript.classes.ClassInfo;
 
-/**
- * @author Peter Güttinger
- */
-@Deprecated
-public interface SerializableChecker<T> extends Checker<T> {}
+public abstract class Yggdrasil {
+
+	private final ClassInfo<?> type;
+
+	protected Yggdrasil(ClassInfo<?> type) {
+		this.type = type;
+	}
+
+	public ClassInfo<?> getType() {
+		return type;
+	}
+}

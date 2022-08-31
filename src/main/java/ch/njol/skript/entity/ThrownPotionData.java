@@ -47,7 +47,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 	static {
 		EntityData.register(ThrownPotionData.class, "thrown potion", ThrownPotion.class, "thrown potion");
 	}
-	
+
 	private static final Adjective m_adjective = new Adjective("entities.thrown potion.adjective");
 	private static final boolean LINGERING_POTION_ENTITY_USED = !Skript.isRunningMinecraft(1, 14);
 	// LingeringPotion class deprecated and marked for removal
@@ -57,10 +57,10 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 	private static final ItemType POTION = Aliases.javaItemType("potion");
 	private static final ItemType SPLASH_POTION = Aliases.javaItemType("splash potion");
 	private static final ItemType LINGER_POTION = Aliases.javaItemType("lingering potion");
-	
+
 	@Nullable
 	private ItemType[] types;
-	
+
 	@Override
 	protected boolean init(Literal<?>[] exprs, int matchedPattern, ParseResult parseResult) {
 		if (exprs.length > 0 && exprs[0] != null) {
@@ -81,7 +81,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected boolean init(@Nullable Class<? extends ThrownPotion> c, @Nullable ThrownPotion e) {
 		if (e != null) {
@@ -90,7 +90,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	protected boolean match(ThrownPotion entity) {
 		if (types != null) {
@@ -137,17 +137,17 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		assert false;
 	}
-	
+
 	@Override
 	public Class<? extends ThrownPotion> getType() {
 		return ThrownPotion.class;
 	}
-	
+
 	@Override
 	public EntityData getSuperType() {
 		return new ThrownPotionData();
 	}
-	
+
 	@Override
 	public boolean isSupertypeOf(EntityData<?> e) {
 		if (!(e instanceof ThrownPotionData))
@@ -158,7 +158,7 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public String toString(int flags) {
 		ItemType[] types = this.types;
@@ -171,28 +171,28 @@ public class ThrownPotionData extends EntityData<ThrownPotion> {
 		b.append(Classes.toString(types, flags & Language.NO_ARTICLE_MASK, false));
 		return "" + b.toString();
 	}
-	
+
 	//		return ItemType.serialize(types);
-	@Override
-	@Deprecated
-	protected boolean deserialize(String s) {
-		throw new UnsupportedOperationException("old serialization is no longer supported");
-//		if (s.isEmpty())
-//			return true;
-//		types = ItemType.deserialize(s);
-//		return types != null;
-	}
-	
+//	@Override
+//	@Deprecated
+//	protected boolean deserialize(String s) {
+//		throw new UnsupportedOperationException("old serialization is no longer supported");
+////		if (s.isEmpty())
+////			return true;
+////		types = ItemType.deserialize(s);
+////		return types != null;
+//	}
+
 	@Override
 	protected boolean equals_i(EntityData<?> obj) {
 		if (!(obj instanceof ThrownPotionData))
 			return false;
 		return Arrays.equals(types, ((ThrownPotionData) obj).types);
 	}
-	
+
 	@Override
 	protected int hashCode_i() {
 		return Arrays.hashCode(types);
 	}
-	
+
 }

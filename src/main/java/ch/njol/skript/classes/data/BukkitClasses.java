@@ -18,27 +18,30 @@
  */
 package ch.njol.skript.classes.data;
 
-import java.io.StreamCorruptedException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Difficulty;
-import org.bukkit.FireworkEffect;
-import org.bukkit.GameMode;
-import org.bukkit.GameRule;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.SoundCategory;
-import org.bukkit.World;
+import ch.njol.skript.Skript;
+import ch.njol.skript.SkriptConfig;
+import ch.njol.skript.aliases.Aliases;
+import ch.njol.skript.aliases.ItemType;
+import ch.njol.skript.bukkitutil.EnchantmentUtils;
+import ch.njol.skript.bukkitutil.ItemUtils;
+import ch.njol.skript.classes.ClassInfo;
+import ch.njol.skript.classes.ConfigurationSerializer;
+import ch.njol.skript.classes.EnumSerializer;
+import ch.njol.skript.classes.Parser;
+import ch.njol.skript.entity.EntityData;
+import ch.njol.skript.expressions.ExprDamageCause;
+import ch.njol.skript.expressions.base.EventValueExpression;
+import ch.njol.skript.lang.ParseContext;
+import ch.njol.skript.lang.util.SimpleLiteral;
+import ch.njol.skript.localization.Language;
+import ch.njol.skript.localization.Message;
+import ch.njol.skript.registrations.Classes;
+import ch.njol.skript.util.*;
+import ch.njol.util.StringUtils;
+import com.skriptlang.skript.yggdrasil.YggdrasilReader;
+import com.skriptlang.skript.yggdrasil.YggdrasilSerializer;
+import com.skriptlang.skript.yggdrasil.YggdrasilWriter;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -48,13 +51,8 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentOffer;
-import org.bukkit.entity.Cat;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.*;
 import org.bukkit.entity.Panda.Gene;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
@@ -73,35 +71,14 @@ import org.bukkit.util.CachedServerIcon;
 import org.bukkit.util.Vector;
 import org.eclipse.jdt.annotation.Nullable;
 
-import ch.njol.skript.Skript;
-import ch.njol.skript.SkriptConfig;
-import ch.njol.skript.aliases.Aliases;
-import ch.njol.skript.aliases.ItemType;
-import ch.njol.skript.bukkitutil.EnchantmentUtils;
-import ch.njol.skript.bukkitutil.ItemUtils;
-import ch.njol.skript.classes.ClassInfo;
-import ch.njol.skript.classes.ConfigurationSerializer;
-import ch.njol.skript.classes.EnumSerializer;
-import ch.njol.skript.classes.Parser;
-import ch.njol.skript.classes.Serializer;
-import ch.njol.skript.entity.EntityData;
-import ch.njol.skript.expressions.ExprDamageCause;
-import ch.njol.skript.expressions.base.EventValueExpression;
-import ch.njol.skript.lang.ParseContext;
-import ch.njol.skript.lang.util.SimpleLiteral;
-import ch.njol.skript.localization.Language;
-import ch.njol.skript.localization.Message;
-import ch.njol.skript.registrations.Classes;
-import ch.njol.skript.util.BiomeUtils;
-import ch.njol.skript.util.BlockUtils;
-import ch.njol.skript.util.DamageCauseUtils;
-import ch.njol.skript.util.EnchantmentType;
-import ch.njol.skript.util.EnumUtils;
-import ch.njol.skript.util.InventoryActions;
-import ch.njol.skript.util.PotionEffectUtils;
-import ch.njol.skript.util.StringMode;
-import ch.njol.util.StringUtils;
-import ch.njol.yggdrasil.Fields;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Peter Güttinger
@@ -151,12 +128,12 @@ public class BukkitClasses {
 						}
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return context == ParseContext.COMMAND;
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Entity e) {
 						return "entity:" + e.getUniqueId().toString().toLowerCase(Locale.ENGLISH);
@@ -168,7 +145,7 @@ public class BukkitClasses {
 					}
 				})
 				.changer(DefaultChangers.entityChanger));
-		
+
 		Classes.registerClass(new ClassInfo<>(LivingEntity.class, "livingentity")
 				.user("living ?entit(y|ies)")
 				.name("Living Entity")
@@ -180,7 +157,7 @@ public class BukkitClasses {
 				.since("1.0")
 				.defaultExpression(new EventValueExpression<>(LivingEntity.class))
 				.changer(DefaultChangers.entityChanger));
-		
+
 		Classes.registerClass(new ClassInfo<>(Projectile.class, "projectile")
 				.user("projectiles?")
 				.name("Projectile")
@@ -191,7 +168,7 @@ public class BukkitClasses {
 				.since("1.0")
 				.defaultExpression(new EventValueExpression<>(Projectile.class))
 				.changer(DefaultChangers.nonLivingEntityChanger));
-		
+
 		Classes.registerClass(new ClassInfo<>(Block.class, "block")
 				.user("blocks?")
 				.name("Block")
@@ -207,17 +184,17 @@ public class BukkitClasses {
 					public Block parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final Block b, final int flags) {
 						return BlockUtils.blockToString(b, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Block b) {
 						return b.getWorld().getName() + ":" + b.getX() + "," + b.getY() + "," + b.getZ();
@@ -229,61 +206,27 @@ public class BukkitClasses {
 					}
 				})
 				.changer(DefaultChangers.blockChanger)
-				.serializer(new Serializer<Block>() {
-					@Override
-					public Fields serialize(final Block b) {
-						final Fields f = new Fields();
-						f.putObject("world", b.getWorld());
-						f.putPrimitive("x", b.getX());
-						f.putPrimitive("y", b.getY());
-						f.putPrimitive("z", b.getZ());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(final Block o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					protected Block deserialize(final Fields fields) throws StreamCorruptedException {
-						final World w = fields.getObject("world", World.class);
-						final int x = fields.getPrimitive("x", int.class), y = fields.getPrimitive("y", int.class), z = fields.getPrimitive("z", int.class);
-						if (w == null)
-							throw new StreamCorruptedException();
-						return w.getBlockAt(x, y, z);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					// return b.getWorld().getName() + ":" + b.getX() + "," + b.getY() + "," + b.getZ();
-					@Override
-					@Nullable
-					public Block deserialize(final String s) {
-						final String[] split = s.split("[:,]");
-						if (split.length != 4)
-							return null;
-						final World w = Bukkit.getWorld(split[0]);
-						if (w == null)
-							return null;
-						try {
-							final int[] l = new int[3];
-							for (int i = 0; i < 3; i++)
-								l[i] = Integer.parseInt(split[i + 1]);
-							return w.getBlockAt(l[0], l[1], l[2]);
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
-				}));
+			.serializer(new YggdrasilSerializer<Block>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, Block b) {
+					writer.writeString("world", b.getWorld().getName())
+						.writeInt("x", b.getX())
+						.writeInt("y", b.getY())
+						.writeInt("z", b.getZ());
+				}
+
+				@Override
+				public @Nullable Block deserialize(YggdrasilReader reader) {
+					String worldName = reader.readString("world");
+					World world = Bukkit.getWorld(worldName);
+					if (world == null)
+						return null;
+					int x = reader.readInt("x"),
+						y = reader.readInt("y"),
+						z = reader.readInt("z");
+					return world.getBlockAt(x, y, z);
+				}
+			}));
 
 		Classes.registerClass(new ClassInfo<>(BlockData.class, "blockdata")
 			.user("block ?datas?")
@@ -318,39 +261,21 @@ public class BukkitClasses {
 				public String toVariableNameString(BlockData o) {
 					return "blockdata:" + o.getAsString();
 				}
-			})
-			.serializer(new Serializer<BlockData>() {
+			}).serializer(new YggdrasilSerializer<BlockData>() {
 				@Override
-				public Fields serialize(BlockData o) {
-					Fields f = new Fields();
-					f.putObject("blockdata", o.getAsString());
-					return f;
+				public void serialize(YggdrasilWriter writer, BlockData blockData) {
+					writer.writeString("blockdata", blockData.getAsString());
 				}
 
 				@Override
-				public void deserialize(BlockData o, Fields f) {
-					assert false;
-				}
-
-				@Override
-				protected BlockData deserialize(Fields f) throws StreamCorruptedException {
-					String data = f.getObject("blockdata", String.class);
+				public BlockData deserialize(YggdrasilReader reader) {
+					String data = reader.readString("blockdata");
 					assert data != null;
 					try {
 						return Bukkit.createBlockData(data);
 					} catch (IllegalArgumentException ex) {
-						throw new StreamCorruptedException("Invalid block data: " + data);
+						return null;
 					}
-				}
-
-				@Override
-				public boolean mustSyncDeserialization() {
-					return true;
-				}
-
-				@Override
-				protected boolean canBeInstantiated() {
-					return false;
 				}
 			}));
 
@@ -369,18 +294,18 @@ public class BukkitClasses {
 					public Location parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final Location l, final int flags) {
 						String worldPart = l.getWorld() == null ? "" : " in '" + l.getWorld().getName() + "'"; // Safety: getWorld is marked as Nullable by spigot
 						return "x: " + Skript.toString(l.getX()) + ", y: " + Skript.toString(l.getY()) + ", z: " + Skript.toString(l.getZ()) + ", yaw: " + Skript.toString(l.getYaw()) + ", pitch: " + Skript.toString(l.getPitch()) + worldPart;
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Location l) {
 						return l.getWorld().getName() + ":" + l.getX() + "," + l.getY() + "," + l.getZ();
@@ -390,63 +315,39 @@ public class BukkitClasses {
 					public String getDebugMessage(final Location l) {
 						return "(" + l.getWorld().getName() + ":" + l.getX() + "," + l.getY() + "," + l.getZ() + "|yaw=" + l.getYaw() + "/pitch=" + l.getPitch() + ")";
 					}
-				}).serializer(new Serializer<Location>() {
-					@Override
-					public Fields serialize(final Location l) {
-						final Fields f = new Fields();
-						f.putObject("world", l.getWorld());
-						f.putPrimitive("x", l.getX());
-						f.putPrimitive("y", l.getY());
-						f.putPrimitive("z", l.getZ());
-						f.putPrimitive("yaw", l.getYaw());
-						f.putPrimitive("pitch", l.getPitch());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(final Location o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public Location deserialize(final Fields f) throws StreamCorruptedException {
-						return new Location(f.getObject("world", World.class),
-								f.getPrimitive("x", double.class), f.getPrimitive("y", double.class), f.getPrimitive("z", double.class),
-								f.getPrimitive("yaw", float.class), f.getPrimitive("pitch", float.class));
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false; // no nullary constructor - also, saving the location manually prevents errors should Location ever be changed
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
-					}
-					
-					// return l.getWorld().getName() + ":" + l.getX() + "," + l.getY() + "," + l.getZ() + "|" + l.getYaw() + "/" + l.getPitch();
-					@Override
-					@Nullable
-					public Location deserialize(final String s) {
-						final String[] split = s.split("[:,|/]");
-						if (split.length != 6)
-							return null;
-						final World w = Bukkit.getWorld(split[0]);
-						if (w == null)
-							return null;
-						try {
-							final double[] l = new double[5];
-							for (int i = 0; i < 5; i++)
-								l[i] = Double.parseDouble(split[i + 1]);
-							return new Location(w, l[0], l[1], l[2], (float) l[3], (float) l[4]);
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
-				})
-				.cloner(Location::clone));
-		
+				}).serializer(new YggdrasilSerializer<Location>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final Location l) {
+					writer.writeString("world", l.getWorld().getName());
+					writer.writeDouble("x", l.getX());
+					writer.writeDouble("y", l.getY());
+					writer.writeDouble("z", l.getZ());
+					writer.writeFloat("yaw", l.getYaw());
+					writer.writeFloat("pitch", l.getPitch());
+				}
+
+				@Override
+				public Location deserialize(YggdrasilReader reader) {
+					String worldName = reader.readString("world");
+					World world = Bukkit.getWorld(worldName);
+					if (world == null)
+						return null;
+					double x = reader.readDouble("x"),
+						y = reader.readDouble("y"),
+						z = reader.readDouble("z");
+					float yaw = reader.readFloat("yaw"),
+						pitch = reader.readFloat("pitch");
+					return new Location(
+						world,
+						reader.readDouble("x"),
+						reader.readDouble("y"),
+						reader.readDouble("z"),
+						reader.readFloat("yaw"),
+						reader.readFloat("pitch")
+					);
+				}
+			}).cloner(Location::clone));
+
 		Classes.registerClass(new ClassInfo<>(Vector.class, "vector")
 				.user("vectors?")
 				.name("Vector")
@@ -461,17 +362,17 @@ public class BukkitClasses {
 					public Vector parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final Vector vec, final int flags) {
 						return "x: " + Skript.toString(vec.getX()) + ", y: " + Skript.toString(vec.getY()) + ", z: " + Skript.toString(vec.getZ());
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Vector vec) {
 						return "vector:" + vec.getX() + "," + vec.getY() + "," + vec.getZ();
@@ -481,39 +382,24 @@ public class BukkitClasses {
 					public String getDebugMessage(final Vector vec) {
 						return "(" + vec.getX() + "," + vec.getY() + "," + vec.getZ() + ")";
 					}
-				})
-				.serializer(new Serializer<Vector>() {
-					@Override
-					public Fields serialize(Vector o) {
-						Fields f = new Fields();
-						f.putPrimitive("x", o.getX());
-						f.putPrimitive("y", o.getY());
-						f.putPrimitive("z", o.getZ());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(Vector o, Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public Vector deserialize(final Fields f) throws StreamCorruptedException {
-						return new Vector(f.getPrimitive("x", double.class), f.getPrimitive("y", double.class), f.getPrimitive("z", double.class));
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
-					
-					@Override
-					protected boolean canBeInstantiated() {
-						return false;
-					}
-				})
-				.cloner(Vector::clone));
-		
+				}).serializer(new YggdrasilSerializer<Vector>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, Vector o) {
+					writer.writeDouble("x", o.getX())
+						.writeDouble("y", o.getY())
+						.writeDouble("z", o.getZ());
+				}
+
+				@Override
+				public Vector deserialize(YggdrasilReader reader) {
+					return new Vector(
+						reader.readDouble("x"),
+						reader.readDouble("y"),
+						reader.readDouble("z")
+					);
+				}
+			}).cloner(Vector::clone));
+
 		Classes.registerClass(new ClassInfo<>(World.class, "world")
 				.user("worlds?")
 				.name("World")
@@ -527,7 +413,7 @@ public class BukkitClasses {
 				.parser(new Parser<World>() {
 					@SuppressWarnings("null")
 					private final Pattern parsePattern = Pattern.compile("(?:(?:the )?world )?\"(.+)\"", Pattern.CASE_INSENSITIVE);
-					
+
 					@Override
 					@Nullable
 					public World parse(final String s, final ParseContext context) {
@@ -539,57 +425,29 @@ public class BukkitClasses {
 							return Bukkit.getWorld(m.group(1));
 						return null;
 					}
-					
+
 					@Override
 					public String toString(final World w, final int flags) {
 						return "" + w.getName();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final World w) {
 						return "" + w.getName();
 					}
-				}).serializer(new Serializer<World>() {
-					@Override
-					public Fields serialize(final World w) {
-						final Fields f = new Fields();
-						f.putObject("name", w.getName());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(final World o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@Override
-					protected World deserialize(final Fields fields) throws StreamCorruptedException {
-						final String name = fields.getObject("name", String.class);
-						assert name != null;
-						final World w = Bukkit.getWorld(name);
-						if (w == null)
-							throw new StreamCorruptedException("Missing world " + name);
-						return w;
-					}
-					
-					// return w.getName();
-					@Override
-					@Nullable
-					public World deserialize(final String s) {
-						return Bukkit.getWorld(s);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
-					}
-				}));
-		
+				}).serializer(new YggdrasilSerializer<World>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final World w) {
+					writer.writeString("name", w.getName());
+				}
+
+				@Override
+				public World deserialize(YggdrasilReader reader) {
+					final String name = reader.readString("name");
+					return Bukkit.getWorld(name);
+				}
+			}));
+
 		Classes.registerClass(new ClassInfo<>(Inventory.class, "inventory")
 				.user("inventor(y|ies)")
 				.name("Inventory")
@@ -608,28 +466,28 @@ public class BukkitClasses {
 					public Inventory parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final Inventory i, final int flags) {
 						return "inventory of " + Classes.toString(i.getHolder());
 					}
-					
+
 					@Override
 					public String getDebugMessage(final Inventory i) {
 						return "inventory of " + Classes.getDebugMessage(i.getHolder());
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Inventory i) {
 						return "inventory of " + Classes.toString(i.getHolder(), StringMode.VARIABLE_NAME);
 					}
 				}).changer(DefaultChangers.inventoryChanger));
-		
+
 		Classes.registerClass(new ClassInfo<>(InventoryAction.class, "inventoryaction")
 				.user("inventory ?actions?")
 				.name("Inventory Action")
@@ -644,19 +502,19 @@ public class BukkitClasses {
 					public InventoryAction parse(String s, ParseContext context) {
 						return InventoryActions.parse(s);
 					}
-					
+
 					@Override
 					public String toString(InventoryAction o, int flags) {
 						return InventoryActions.toString(o, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(InventoryAction o) {
 						return o.name();
 					}
 				}));
-		
+
 		final EnumUtils<ClickType> invClicks = new EnumUtils<>(ClickType.class, "click types");
 		Classes.registerClass(new ClassInfo<>(ClickType.class, "clicktype")
 				.user("click ?types?")
@@ -673,19 +531,19 @@ public class BukkitClasses {
 					public ClickType parse(String s, ParseContext context) {
 						return invClicks.parse(s);
 					}
-					
+
 					@Override
 					public String toString(ClickType o, int flags) {
 						return invClicks.toString(o, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(ClickType o) {
 						return o.name();
 					}
 				}));
-		
+
 		final EnumUtils<InventoryType> invTypes = new EnumUtils<>(InventoryType.class, "inventory types");
 		Classes.registerClass(new ClassInfo<>(InventoryType.class, "inventorytype")
 				.user("inventory ?types?")
@@ -701,19 +559,19 @@ public class BukkitClasses {
 					public InventoryType parse(String s, ParseContext context) {
 						return invTypes.parse(s);
 					}
-					
+
 					@Override
 					public String toString(InventoryType o, int flags) {
 						return invTypes.toString(o, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(InventoryType o) {
 						return o.name();
 					}
 				}));
-		
+
 		Classes.registerClass(new ClassInfo<>(Player.class, "player")
 				.user("players?")
 				.name("Player")
@@ -748,17 +606,17 @@ public class BukkitClasses {
 						assert false;
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return context == ParseContext.COMMAND;
 					}
-					
+
 					@Override
 					public String toString(final Player p, final int flags) {
 						return "" + p.getName();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Player p) {
 						if (SkriptConfig.usePlayerUUIDsInVariableNames.value())
@@ -801,17 +659,17 @@ public class BukkitClasses {
 						assert false;
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(ParseContext context) {
 						return context == ParseContext.COMMAND;
 					}
-					
+
 					@Override
 					public String toString(OfflinePlayer p, int flags) {
 						return p.getName() == null ? p.getUniqueId().toString() : p.getName();
 					}
-					
+
 					@Override
 					public String toVariableNameString(OfflinePlayer p) {
 						if (SkriptConfig.usePlayerUUIDsInVariableNames.value() || p.getName() == null)
@@ -826,54 +684,25 @@ public class BukkitClasses {
 							return Classes.getDebugMessage(p.getPlayer());
 						return toString(p, 0);
 					}
-				}).serializer(new Serializer<OfflinePlayer>() {
-					@Override
-					public Fields serialize(final OfflinePlayer p) {
-						final Fields f = new Fields();
-						f.putObject("uuid", p.getUniqueId());
-						return f;
+				}).serializer(new YggdrasilSerializer<OfflinePlayer>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final OfflinePlayer p) {
+					writer.writeString("uuid", p.getUniqueId().toString());
+				}
+
+				@Override
+				public OfflinePlayer deserialize(YggdrasilReader reader) {
+					if (reader.contains("uuid")) {
+						final String uuidString = reader.readString("uuid");
+						if (uuidString == null)
+							return null;
+						return Bukkit.getOfflinePlayer(UUID.fromString(uuidString));
+					} else {
+						return Bukkit.getOfflinePlayer(reader.readString("name"));
 					}
-					
-					@Override
-					public void deserialize(final OfflinePlayer o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@SuppressWarnings("deprecation")
-					@Override
-					protected OfflinePlayer deserialize(final Fields fields) throws StreamCorruptedException {
-						if (fields.contains("uuid")) {
-							final UUID uuid = fields.getObject("uuid", UUID.class);
-							if (uuid == null)
-								throw new StreamCorruptedException();
-							return Bukkit.getOfflinePlayer(uuid);
-						} else {
-							final String name = fields.getObject("name", String.class);
-							if (name == null)
-								throw new StreamCorruptedException();
-							return Bukkit.getOfflinePlayer(name);
-						}
-					}
-					
-					// return p.getName();
-					@SuppressWarnings("deprecation")
-					@Override
-					@Nullable
-					public OfflinePlayer deserialize(final String s) {
-						return Bukkit.getOfflinePlayer(s);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
-					}
-				}));
-		
+				}
+			}));
+
 		Classes.registerClass(new ClassInfo<>(CommandSender.class, "commandsender")
 				.user("((commands?)? ?)?(sender|executor)s?")
 				.name("Command Sender")
@@ -899,23 +728,23 @@ public class BukkitClasses {
 					public CommandSender parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final CommandSender s, final int flags) {
 						return "" + s.getName();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final CommandSender s) {
 						return "" + s.getName();
 					}
 				}));
-		
+
 		Classes.registerClass(new ClassInfo<>(InventoryHolder.class, "inventoryholder")
 				.name(ClassInfo.NO_DOC)
 				.defaultExpression(new EventValueExpression<>(InventoryHolder.class))
@@ -925,7 +754,7 @@ public class BukkitClasses {
 					public boolean canParse(ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(InventoryHolder holder, int flags) {
 						if (holder instanceof BlockState) {
@@ -936,7 +765,7 @@ public class BukkitClasses {
 							return Classes.toString(holder);
 						}
 					}
-					
+
 					@Override
 					public String toVariableNameString(InventoryHolder holder) {
 						return toString(holder, 0);
@@ -953,14 +782,14 @@ public class BukkitClasses {
 				.defaultExpression(new SimpleLiteral<>(GameMode.SURVIVAL, true))
 				.parser(new Parser<GameMode>() {
 					private final Message[] names = new Message[GameMode.values().length];
-					
+
 					{
 						int i = 0;
 						for (final GameMode m : GameMode.values()) {
 							names[i++] = new Message("game modes." + m.name());
 						}
 					}
-					
+
 					@Override
 					@Nullable
 					public GameMode parse(final String s, final ParseContext context) {
@@ -970,18 +799,18 @@ public class BukkitClasses {
 						}
 						return null;
 					}
-					
+
 					@Override
 					public String toString(final GameMode m, final int flags) {
 						return names[m.ordinal()].toString();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final GameMode o) {
 						return "" + o.toString().toLowerCase(Locale.ENGLISH);
 					}
 				}).serializer(new EnumSerializer<>(GameMode.class)));
-		
+
 		Classes.registerClass(new ClassInfo<>(ItemStack.class, "itemstack")
 				.user("item", "material")
 				.name("Item / Material")
@@ -1008,24 +837,24 @@ public class BukkitClasses {
 							Skript.error("'" + s + "' represents multiple materials");
 							return null;
 						}
-						
+
 						final ItemStack i = t.getRandom();
 						assert i != null;
 						return i;
 					}
-					
+
 					@Override
 					public String toString(final ItemStack i, final int flags) {
 						return ItemType.toString(i, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final ItemStack i) {
 						final StringBuilder b = new StringBuilder("item:");
 						b.append(i.getType().name());
 						b.append(":" + ItemUtils.getDamage(i));
 						b.append("*" + i.getAmount());
-						
+
 						for (Entry<Enchantment, Integer> entry : i.getEnchantments().entrySet())
 							b.append("#" + EnchantmentUtils.getKey(entry.getKey()))
 									.append(":" + entry.getValue());
@@ -1035,12 +864,12 @@ public class BukkitClasses {
 				})
 				.cloner(ItemStack::clone)
 				.serializer(new ConfigurationSerializer<>()));
-		
+
 		Classes.registerClass(new ClassInfo<>(Item.class, "itementity")
 				.name(ClassInfo.NO_DOC)
 				.since("2.0")
 				.changer(DefaultChangers.itemChanger));
-		
+
 		Classes.registerClass(new ClassInfo<>(Biome.class, "biome")
 				.user("biomes?")
 				.name("Biome")
@@ -1055,19 +884,19 @@ public class BukkitClasses {
 					public Biome parse(final String s, final ParseContext context) {
 						return BiomeUtils.parse(s);
 					}
-					
+
 					@Override
 					public String toString(final Biome b, final int flags) {
 						return BiomeUtils.toString(b, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Biome b) {
 						return "" + b.name();
 					}
 				})
 				.serializer(new EnumSerializer<>(Biome.class)));
-		
+
 		Classes.registerClass(new ClassInfo<>(PotionEffect.class, "potioneffect")
 			.user("potion ?effects?")
 			.name("Potion Effect")
@@ -1075,65 +904,47 @@ public class BukkitClasses {
 			.usage("speed of tier 1 for 10 seconds")
 			.since("2.5.2")
 			.parser(new Parser<PotionEffect>() {
-				
+
 				@Override
 				public boolean canParse(ParseContext context) {
 					return false;
 				}
-				
+
 				@Override
 				public String toString(PotionEffect potionEffect, int flags) {
 					return PotionEffectUtils.toString(potionEffect);
 				}
-				
+
 				@Override
 				public String toVariableNameString(PotionEffect o) {
 					return "potion_effect:" + o.getType().getName();
 				}
 
-			})
-			.serializer(new Serializer<PotionEffect>() {
-				@Override
-				public Fields serialize(PotionEffect o) {
-					Fields fields = new Fields();
-					fields.putObject("type", o.getType().getName());
-					fields.putPrimitive("amplifier", o.getAmplifier());
-					fields.putPrimitive("duration", o.getDuration());
-					fields.putPrimitive("particles", o.hasParticles());
-					fields.putPrimitive("ambient", o.isAmbient());
-					return fields;
-				}
-				
-				@Override
-				public void deserialize(PotionEffect o, Fields f) {
-					assert false;
-				}
-				
-				@Override
-				protected PotionEffect deserialize(Fields fields) throws StreamCorruptedException {
-					String typeName = fields.getObject("type", String.class);
-					assert typeName != null;
-					PotionEffectType type = PotionEffectType.getByName(typeName);
-					if (type == null)
-						throw new StreamCorruptedException("Invalid PotionEffectType " + typeName);
-					int amplifier = fields.getPrimitive("amplifier", int.class);
-					int duration = fields.getPrimitive("duration", int.class);
-					boolean particles = fields.getPrimitive("particles", boolean.class);
-					boolean ambient = fields.getPrimitive("ambient", boolean.class);
-					return new PotionEffect(type, duration, amplifier, ambient, particles);
-				}
-				
-				@Override
-				public boolean mustSyncDeserialization() {
-					return false;
-				}
-				
-				@Override
-				protected boolean canBeInstantiated() {
-					return false;
-				}
-			}));
-		
+			}).serializer(new YggdrasilSerializer<PotionEffect>() {
+					@Override
+					public void serialize(YggdrasilWriter writer, PotionEffect o) {
+						writer.writeString("type", o.getType().getName())
+							.writeInt("amplifier", o.getAmplifier())
+							.writeInt("duration", o.getDuration())
+							.writeBoolean("particles", o.hasParticles())
+							.writeBoolean("ambient", o.isAmbient());
+					}
+
+					@Override
+					public PotionEffect deserialize(YggdrasilReader reader) {
+						PotionEffectType type = PotionEffectType.getByName(reader.readString("type"));
+						if (type == null)
+							return null;
+						return new PotionEffect(
+							type,
+							reader.readInt("duration"),
+							reader.readInt("amplifier"),
+							reader.readBoolean("ambient"),
+							reader.readBoolean("particles")
+						);
+					}
+				}));
+
 		Classes.registerClass(new ClassInfo<>(PotionEffectType.class, "potioneffecttype")
 				.user("potion( ?effect)? ?types?") // "type" had to be made non-optional to prevent clashing with potion effects
 				.name("Potion Effect Type")
@@ -1149,58 +960,29 @@ public class BukkitClasses {
 					public PotionEffectType parse(final String s, final ParseContext context) {
 						return PotionEffectUtils.parseType(s);
 					}
-					
+
 					@Override
 					public String toString(final PotionEffectType p, final int flags) {
 						return PotionEffectUtils.toString(p, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final PotionEffectType p) {
 						return "" + p.getName();
 					}
 				})
-				.serializer(new Serializer<PotionEffectType>() {
-					@Override
-					public Fields serialize(final PotionEffectType o) {
-						final Fields f = new Fields();
-						f.putObject("name", o.getName());
-						return f;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@Override
-					public void deserialize(final PotionEffectType o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					protected PotionEffectType deserialize(final Fields fields) throws StreamCorruptedException {
-						final String name = fields.getObject("name", String.class);
-						assert name != null;
-						final PotionEffectType t = PotionEffectType.getByName(name);
-						if (t == null)
-							throw new StreamCorruptedException("Invalid PotionEffectType " + name);
-						return t;
-					}
-					
-					// return o.getName();
-					@Override
-					@Nullable
-					public PotionEffectType deserialize(final String s) {
-						return PotionEffectType.getByName(s);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
-				}));
-		
+			.serializer(new YggdrasilSerializer<PotionEffectType>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final PotionEffectType o) {
+					writer.writeString("name", o.getName());
+				}
+
+				@Override
+				public PotionEffectType deserialize(YggdrasilReader reader) {
+					return PotionEffectType.getByName(reader.readString("name"));
+				}
+			}));
+
 		// REMIND make my own damage cause class (that e.g. stores the attacker entity, the projectile, or the attacking block)
 		Classes.registerClass(new ClassInfo<>(DamageCause.class, "damagecause")
 				.user("damage ?causes?")
@@ -1219,19 +1001,19 @@ public class BukkitClasses {
 					public DamageCause parse(final String s, final ParseContext context) {
 						return DamageCauseUtils.parse(s);
 					}
-					
+
 					@Override
 					public String toString(final DamageCause d, final int flags) {
 						return DamageCauseUtils.toString(d, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final DamageCause d) {
 						return "" + d.name();
 					}
 				})
 				.serializer(new EnumSerializer<>(DamageCause.class)));
-		
+
 		Classes.registerClass(new ClassInfo<>(Chunk.class, "chunk")
 				.user("chunks?")
 				.name("Chunk")
@@ -1245,76 +1027,40 @@ public class BukkitClasses {
 					public Chunk parse(final String s, final ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(final ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(final Chunk c, final int flags) {
 						return "chunk (" + c.getX() + "," + c.getZ() + ") of " + c.getWorld().getName();
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Chunk c) {
 						return c.getWorld().getName() + ":" + c.getX() + "," + c.getZ();
 					}
 				})
-				.serializer(new Serializer<Chunk>() {
-					@Override
-					public Fields serialize(final Chunk c) {
-						final Fields f = new Fields();
-						f.putObject("world", c.getWorld());
-						f.putPrimitive("x", c.getX());
-						f.putPrimitive("z", c.getZ());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(final Chunk o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@Override
-					protected Chunk deserialize(final Fields fields) throws StreamCorruptedException {
-						final World w = fields.getObject("world", World.class);
-						final int x = fields.getPrimitive("x", int.class), z = fields.getPrimitive("z", int.class);
-						if (w == null)
-							throw new StreamCorruptedException();
-						return w.getChunkAt(x, z);
-					}
-					
-					// return c.getWorld().getName() + ":" + c.getX() + "," + c.getZ();
-					@Override
-					@Nullable
-					public Chunk deserialize(final String s) {
-						final String[] split = s.split("[:,]");
-						if (split.length != 3)
-							return null;
-						final World w = Bukkit.getWorld(split[0]);
-						if (w == null)
-							return null;
-						try {
-							final int x = Integer.parseInt(split[1]);
-							final int z = Integer.parseInt(split[1]);
-							return w.getChunkAt(x, z);
-						} catch (final NumberFormatException e) {
-							return null;
-						}
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return true;
-					}
-				}));
-		
+			.serializer(new YggdrasilSerializer<Chunk>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final Chunk c) {
+					writer.writeString("world", c.getWorld().toString())
+						.writeInt("x", c.getX())
+						.writeInt("z", c.getZ());
+				}
+
+				@Override
+				public Chunk deserialize(YggdrasilReader reader) {
+					final String worldName = reader.readString("world");
+					World world = Bukkit.getWorld(worldName);
+					if (world == null)
+						return null;
+					return world.getChunkAt(reader.readInt("x"), reader.readInt("z"));
+				}
+			}));
+
 		Classes.registerClass(new ClassInfo<>(Enchantment.class, "enchantment")
 				.user("enchantments?")
 				.name("Enchantment")
@@ -1330,100 +1076,55 @@ public class BukkitClasses {
 					public Enchantment parse(final String s, final ParseContext context) {
 						return EnchantmentType.parseEnchantment(s);
 					}
-					
+
 					@Override
 					public String toString(final Enchantment e, final int flags) {
 						return EnchantmentType.toString(e, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(final Enchantment e) {
 						return "" + EnchantmentUtils.getKey(e);
 					}
 				})
-				.serializer(new Serializer<Enchantment>() {
-					@Override
-					public Fields serialize(final Enchantment ench) {
-						final Fields f = new Fields();
-						f.putObject("key", EnchantmentUtils.getKey(ench));
-						return f;
-					}
-					
-					@Override
-					public boolean canBeInstantiated() {
-						return false;
-					}
-					
-					@Override
-					public void deserialize(final Enchantment o, final Fields f) {
-						assert false;
-					}
-					
-					@Override
-					protected Enchantment deserialize(final Fields fields) throws StreamCorruptedException {
-						final String key = fields.getObject("key", String.class);
-						assert key != null; // If a key happens to be null, something went really wrong...
-						final Enchantment e = EnchantmentUtils.getByKey(key);
-						if (e == null)
-							throw new StreamCorruptedException("Invalid enchantment " + key);
-						return e;
-					}
-					
-					// return "" + e.getId();
-					@Override
-					@Nullable
-					public Enchantment deserialize(String s) {
-						return Enchantment.getByName(s);
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
-				}));
-		
+			.serializer(new YggdrasilSerializer<Enchantment>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, final Enchantment ench) {
+					writer.writeString("key", EnchantmentUtils.getKey(ench));
+				}
+
+				@Override
+				public Enchantment deserialize(YggdrasilReader reader) {
+					return EnchantmentUtils.getByKey(reader.readString("key"));
+				}
+			}));
+
 		Material[] allMaterials = Material.values();
 		Classes.registerClass(new ClassInfo<>(Material.class, "material")
 				.name(ClassInfo.NO_DOC)
 				.since("aliases-rework")
-				.serializer(new Serializer<Material>() {
-					@Override
-					public Fields serialize(Material o) {
-						Fields f = new Fields();
-						f.putObject("i", o.ordinal());
-						return f;
-					}
-					
-					@Override
-					public void deserialize(Material o, Fields f) {
-						assert false;
-					}
-					
-					@Override
-					public Material deserialize(Fields f) throws StreamCorruptedException {
-						Material mat = allMaterials[(int) f.getPrimitive("i")];
-						assert mat != null; // Hope server owner didn't mod too much...
-						return mat;
-					}
-					
-					@Override
-					public boolean mustSyncDeserialization() {
-						return false;
-					}
-					
-					@Override
-					protected boolean canBeInstantiated() {
-						return false; // It is an enum, come on
-					}
-				}));
-		
+			.serializer(new YggdrasilSerializer<Material>() {
+				@Override
+				public void serialize(YggdrasilWriter writer, Material o) {
+					writer.writeInt("i", o.ordinal());
+				}
+
+				@Override
+				public Material deserialize(YggdrasilReader reader) {
+					int i = reader.readInt("i");
+					if (i > allMaterials.length)
+						return null;
+					return allMaterials[i];
+				}
+			}));
+
 		Classes.registerClass(new ClassInfo<>(Metadatable.class, "metadataholder")
 				.user("metadata ?holders?")
 				.name("Metadata Holder")
 				.description("Something that can hold metadata (e.g. an entity or block)")
 				.examples("set metadata value \"super cool\" of player to true")
 				.since("2.2-dev36"));
-		
+
 		EnumUtils<TeleportCause> teleportCauses = new EnumUtils<>(TeleportCause.class, "teleport causes");
 		Classes.registerClass(new ClassInfo<>(TeleportCause.class, "teleportcause")
 				.user("teleport ?(cause|reason|type)s?")
@@ -1437,12 +1138,12 @@ public class BukkitClasses {
 					public TeleportCause parse(String input, ParseContext context) {
 						return teleportCauses.parse(input);
 					}
-					
+
 					@Override
 					public String toString(TeleportCause teleportCause, int flags) {
 						return teleportCauses.toString(teleportCause, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(TeleportCause teleportCause) {
@@ -1450,7 +1151,7 @@ public class BukkitClasses {
 					}
 				})
 				.serializer(new EnumSerializer<>(TeleportCause.class)));
-		
+
 		EnumUtils<SpawnReason> spawnReasons = new EnumUtils<>(SpawnReason.class, "spawn reasons");
 		Classes.registerClass(new ClassInfo<>(SpawnReason.class, "spawnreason")
 				.user("spawn(ing)? ?reasons?")
@@ -1464,12 +1165,12 @@ public class BukkitClasses {
 					public SpawnReason parse(String input, ParseContext context) {
 						return spawnReasons.parse(input);
 					}
-					
+
 					@Override
 					public String toString(SpawnReason spawnReason, int flags) {
 						return spawnReasons.toString(spawnReason, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(SpawnReason spawnReason) {
@@ -1477,7 +1178,7 @@ public class BukkitClasses {
 					}
 				})
 				.serializer(new EnumSerializer<>(SpawnReason.class)));
-		
+
 		if (Skript.classExists("com.destroystokyo.paper.event.server.PaperServerListPingEvent")) {
 			Classes.registerClass(new ClassInfo<>(CachedServerIcon.class, "cachedservericon")
 					.user("server ?icons?")
@@ -1491,24 +1192,24 @@ public class BukkitClasses {
 						public CachedServerIcon parse(final String s, final ParseContext context) {
 							return null;
 						}
-						
+
 						@Override
 						public boolean canParse(final ParseContext context) {
 							return false;
 						}
-						
+
 						@Override
 						public String toString(final CachedServerIcon o, int flags) {
 							return "server icon";
 						}
-						
+
 						@Override
 						public String toVariableNameString(final CachedServerIcon o) {
 							return "server icon";
 						}
 					}));
 		}
-		
+
 		EnumUtils<FireworkEffect.Type> fireworktypes = new EnumUtils<>(FireworkEffect.Type.class, "firework types");
 		Classes.registerClass(new ClassInfo<>(FireworkEffect.Type.class, "fireworktype")
 				.user("firework ?types?")
@@ -1523,12 +1224,12 @@ public class BukkitClasses {
 					public FireworkEffect.@Nullable Type parse(String input, ParseContext context) {
 						return fireworktypes.parse(input);
 					}
-					
+
 					@Override
 					public String toString(FireworkEffect.Type type, int flags) {
 						return fireworktypes.toString(type, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(FireworkEffect.Type type) {
@@ -1536,7 +1237,7 @@ public class BukkitClasses {
 					}
 				})
 				.serializer(new EnumSerializer<>(FireworkEffect.Type.class)));
-		
+
 		Classes.registerClass(new ClassInfo<>(FireworkEffect.class, "fireworkeffect")
 				.user("firework ?effects?")
 				.name("Firework Effect")
@@ -1554,23 +1255,23 @@ public class BukkitClasses {
 					public FireworkEffect parse(String input, ParseContext context) {
 						return null;
 					}
-					
+
 					@Override
 					public boolean canParse(ParseContext context) {
 						return false;
 					}
-					
+
 					@Override
 					public String toString(FireworkEffect effect, int flags) {
 						return "Firework effect " + effect.toString();
 					}
-					
+
 					@Override
 					public String toVariableNameString(FireworkEffect effect) {
 						return "firework effect " + effect.toString();
 					}
 				}));
-		
+
 		EnumUtils<Difficulty> difficulties = new EnumUtils<>(Difficulty.class, "difficulties");
 		Classes.registerClass(new ClassInfo<>(Difficulty.class, "difficulty")
 				.user("difficult(y|ies)")
@@ -1584,12 +1285,12 @@ public class BukkitClasses {
 					public Difficulty parse(final String input, final ParseContext context) {
 						return difficulties.parse(input);
 					}
-					
+
 					@Override
 					public String toString(Difficulty difficulty, int flags) {
 						return difficulties.toString(difficulty, flags);
 					}
-					
+
 					@SuppressWarnings("null")
 					@Override
 					public String toVariableNameString(Difficulty difficulty) {
@@ -1598,7 +1299,7 @@ public class BukkitClasses {
 
 				})
 				.serializer(new EnumSerializer<>(Difficulty.class)));
-		
+
 		EnumUtils<Status> resourcePackStates = new EnumUtils<>(Status.class, "resource pack states");
 		Classes.registerClass(new ClassInfo<>(Status.class, "resourcepackstate")
 				.user("resource ?pack ?states?")
@@ -1671,12 +1372,12 @@ public class BukkitClasses {
 						public Gene parse(String expr, ParseContext context) {
 							return genes.parse(expr);
 						}
-						
+
 						@Override
 						public String toString(Gene gene, int flags) {
 							return genes.toString(gene, flags);
 						}
-						
+
 						@Override
 						public String toVariableNameString(Gene gene) {
 							return gene.name();
@@ -1698,12 +1399,12 @@ public class BukkitClasses {
 				public RegainReason parse(String s, ParseContext parseContext) {
 					return regainReasons.parse(s);
 				}
-				
+
 				@Override
 				public String toString(RegainReason o, int flags) {
 					return regainReasons.toString(o, flags);
 				}
-				
+
 				@Override
 				public String toVariableNameString(RegainReason o) {
 					return "regainreason:" + o.name();
@@ -1725,12 +1426,12 @@ public class BukkitClasses {
 						public Cat.@Nullable Type parse(String expr, ParseContext context) {
 							return races.parse(expr);
 						}
-						
+
 						@Override
 						public String toString(Cat.Type race, int flags) {
 							return races.toString(race, flags);
 						}
-						
+
 						@Override
 						public String toVariableNameString(Cat.Type race) {
 							return race.name();
@@ -1824,12 +1525,12 @@ public class BukkitClasses {
 					public Attribute parse(String input, ParseContext context) {
 						return attributes.parse(input);
 					}
-					
+
 					@Override
 					public String toString(Attribute a, int flags) {
 						return attributes.toString(a, flags);
 					}
-					
+
 					@Override
 					public String toVariableNameString(Attribute a) {
 						return toString(a, 0);

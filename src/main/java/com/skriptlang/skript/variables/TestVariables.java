@@ -16,12 +16,20 @@
  *
  * Copyright Peter Güttinger, SkriptLang team and contributors
  */
-package ch.njol.skript.classes;
+package com.skriptlang.skript.variables;
 
-import ch.njol.skript.util.Getter;
+public class TestVariables {
 
-/**
- * @author Peter Güttinger
- */
-@Deprecated
-public abstract class SerializableGetter<R, A> extends Getter<R, A> {}
+	public static void test() throws InterruptedException {
+		main(new String[0]);
+	}
+
+	public static void main(String[] args) {
+		System.out.println("=== TEST ===");
+		VariableMap map = new VariableMap();
+		map.setVariable("alphabet::1", "a");
+		map.setVariable("alphabet::2", "b");
+		System.out.println(map.getVariable("alphabet::*"));
+	}
+
+}

@@ -42,9 +42,6 @@ import com.google.common.base.Objects;
 
 import ch.njol.skript.hooks.regions.WorldGuardHook.WorldGuardRegion;
 import ch.njol.skript.hooks.regions.classes.Region;
-import ch.njol.skript.variables.Variables;
-import ch.njol.yggdrasil.Fields;
-import ch.njol.yggdrasil.YggdrasilID;
 
 /**
  * Hook for Residence protection plugin. Currently supports
@@ -52,19 +49,19 @@ import ch.njol.yggdrasil.YggdrasilID;
  * @author bensku
  */
 public class ResidenceHook extends RegionsPlugin<Residence> {
-	
+
 	public ResidenceHook() throws IOException {}
-	
+
 	@Override
 	protected boolean init() {
 		return super.init();
 	}
-	
+
 	@Override
 	public String getName() {
 		return "Residence";
 	}
-	
+
 	@Override
 	public boolean canBuild_i(final Player p, final Location l) {
 		final ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(l);
@@ -73,7 +70,7 @@ public class ResidenceHook extends RegionsPlugin<Residence> {
 		ResidencePermissions perms = res.getPermissions();
 		return perms.playerHas(p, Flags.build, true);
 	}
-	
+
 	@SuppressWarnings("null")
 	@Override
 	public Collection<? extends Region> getRegionsAt_i(final Location l) {
@@ -84,7 +81,7 @@ public class ResidenceHook extends RegionsPlugin<Residence> {
 		ress.add(new ResidenceRegion(l.getWorld(), res));
 		return ress;
 	}
-	
+
 	@Override
 	@Nullable
 	public Region getRegion_i(final World world, final String name) {
@@ -93,55 +90,50 @@ public class ResidenceHook extends RegionsPlugin<Residence> {
 			return null;
 		return new ResidenceRegion(world, res);
 	}
-	
+
 	@Override
 	public boolean hasMultipleOwners_i() {
 		return true;
 	}
-	
+
 	@Override
 	protected Class<? extends Region> getRegionClass() {
 		return WorldGuardRegion.class;
 	}
-	
-	static {
-		Variables.yggdrasil.registerSingleClass(ResidenceRegion.class);
-	}
-	
-	@YggdrasilID("ResidenceRegion")
+
 	public class ResidenceRegion extends Region {
-		
+
 		private transient ClaimedResidence res;
 		final World world;
-		
+
 		@SuppressWarnings({"null", "unused"})
 		private ResidenceRegion() {
 			world = null;
 		}
-		
+
 		public ResidenceRegion(final World w, ClaimedResidence r) {
 			res = r;
 			world = w;
 		}
-		
-		@Override
-		public Fields serialize() throws NotSerializableException {
-			final Fields f = new Fields(this);
-			f.putObject("region", res.getName());
-			return f;
-		}
 
-		@Override
-		public void deserialize(Fields fields) throws StreamCorruptedException, NotSerializableException {
-			Object region = fields.getObject("region");
-			if (!(region instanceof String))
-				throw new StreamCorruptedException("Tried to deserialize Residence region with no valid name!");
-			fields.setFields(this);
-			ClaimedResidence res = Residence.getInstance().getResidenceManager().getByName((String) region);
-			if (res == null)
-				throw new StreamCorruptedException("Invalid region " + region + " in world " + world);
-			this.res = res;
-		}
+//		@Override
+//		public Fields serialize() throws NotSerializableException {
+//			final Fields f = new Fields(this);
+//			f.putObject("region", res.getName());
+//			return f;
+//		}
+//
+//		@Override
+//		public void deserialize(Fields fields) throws StreamCorruptedException, NotSerializableException {
+//			Object region = fields.getObject("region");
+//			if (!(region instanceof String))
+//				throw new StreamCorruptedException("Tried to deserialize Residence region with no valid name!");
+//			fields.setFields(this);
+//			ClaimedResidence res = Residence.getInstance().getResidenceManager().getByName((String) region);
+//			if (res == null)
+//				throw new StreamCorruptedException("Invalid region " + region + " in world " + world);
+//			this.res = res;
+//		}
 
 		@Override
 		public boolean contains(Location l) {
@@ -201,6 +193,6 @@ public class ResidenceHook extends RegionsPlugin<Residence> {
 		public int hashCode() {
 			return res.getName().hashCode();
 		}
-		
+
 	}
 }
